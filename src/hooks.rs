@@ -25,7 +25,14 @@ impl ProgressHook {
         if s.len() <= max_len {
             s.to_string()
         } else {
-            format!("{}...", &s[..max_len])
+            // Find a valid UTF-8 character boundary at or before max_len
+            let truncate_at = s
+                .char_indices()
+                .take_while(|(idx, _)| *idx < max_len)
+                .last()
+                .map(|(idx, ch)| idx + ch.len_utf8())
+                .unwrap_or(0);
+            format!("{}...", &s[..truncate_at])
         }
     }
 }
