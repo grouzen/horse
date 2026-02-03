@@ -17,7 +17,8 @@ const ALLOWED_COMMANDS: &[&str] = &[
     "grep", "find", "cat", "head", "tail", "ls", "tree", "wc", "file", "rg",
 ];
 
-const FORBIDDEN_PATTERNS: &[&str] = &["|", ";", "&&", "||", "`", "$(", ">", "<", ">>", "<<"];
+// Allow pipes but block more dangerous patterns
+const FORBIDDEN_PATTERNS: &[&str] = &[";", "&&", "||", "`", "$(", ">", "<", ">>", "<<"];
 
 #[derive(Deserialize)]
 pub struct BashCommandArgs {
@@ -65,18 +66,28 @@ impl BashCommand {
             }
         }
 
-        // Extract the first word (command name)
-        let first_word = trimmed
-            .split_whitespace()
-            .next()
-            .ok_or(BashCommandError::EmptyCommand)?;
+        // Split by pipe to validate each command in the pipeline
+        let commands: Vec<&str> = trimmed.split('|').collect();
 
-        // Check if command is in whitelist
-        if !ALLOWED_COMMANDS.contains(&first_word) {
-            return Err(BashCommandError::CommandNotAllowed(
-                first_word.to_string(),
-                ALLOWED_COMMANDS.join(", "),
-            ));
+        for cmd in commands {
+            let cmd = cmd.trim();
+            if cmd.is_empty() {
+                continue;
+            }
+
+            // Extract the first word (command name)
+            let first_word = cmd
+                .split_whitespace()
+                .next()
+                .ok_or(BashCommandError::EmptyCommand)?;
+
+            // Check if command is in whitelist
+            if !ALLOWED_COMMANDS.contains(&first_word) {
+                return Err(BashCommandError::CommandNotAllowed(
+                    first_word.to_string(),
+                    ALLOWED_COMMANDS.join(", "),
+                ));
+            }
         }
 
         Ok(())
@@ -95,7 +106,7 @@ impl Tool for BashCommand {
             name: Self::NAME.to_string(),
             description: format!(
                 "Execute a read-only bash command. Only the following commands are allowed: {}. \
-                Pipes, redirects, and command chaining are not allowed.",
+                Pipes (|) are allowed for chaining these commands. Redirects and command chaining with ;, &&, || are not allowed.",
                 ALLOWED_COMMANDS.join(", ")
             ),
             parameters: json!({
@@ -114,16 +125,27 @@ impl Tool for BashCommand {
     async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
         self.validate_command(&args.command)?;
 
-        // Parse command into parts
-        let parts: Vec<&str> = args.command.split_whitespace().collect();
-        let (cmd, cmd_args) = parts.split_first().ok_or(BashCommandError::EmptyCommand)?;
+        // If command contains pipe, use shell; otherwise execute directly
+        let mut child = if args.command.contains('|') {
+            Command::new("sh")
+                .arg("-c")
+                .arg(&args.command)
+                .current_dir(&self.base_dir)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()?
+        } else {
+            // Parse command into parts for direct execution
+            let parts: Vec<&str> = args.command.split_whitespace().collect();
+            let (cmd, cmd_args) = parts.split_first().ok_or(BashCommandError::EmptyCommand)?;
 
-        let mut child = Command::new(cmd)
-            .args(cmd_args)
-            .current_dir(&self.base_dir)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()?;
+            Command::new(cmd)
+                .args(cmd_args)
+                .current_dir(&self.base_dir)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()?
+        };
 
         let result = timeout(Duration::from_secs(TIMEOUT_SECS), async {
             let mut stdout = String::new();
