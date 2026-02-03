@@ -212,7 +212,14 @@ impl Tool for BashCommand {
                     Ok(output)
                 } else {
                     let exit_code = status.code().unwrap_or(-1);
-                    let error_output = if stderr.is_empty() { stdout } else { stderr };
+                    // Provide both stdout and stderr for better context
+                    let error_output = if !stderr.is_empty() {
+                        stderr
+                    } else if !stdout.is_empty() {
+                        stdout
+                    } else {
+                        format!("Command exited with code {} (no output)", exit_code)
+                    };
                     Err(BashCommandError::CommandFailed(exit_code, error_output))
                 }
             }
