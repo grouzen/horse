@@ -127,6 +127,43 @@ impl BashCommand {
 
         result
     }
+
+    /// Parse a command string into parts while respecting quotes
+    /// Returns a vector of argument strings with quotes removed
+    fn parse_args(&self, command: &str) -> Vec<String> {
+        let mut args = Vec::new();
+        let mut current = String::new();
+        let mut in_single_quote = false;
+        let mut in_double_quote = false;
+        let mut prev_char = '\0';
+
+        for c in command.chars() {
+            match c {
+                '\'' if prev_char != '\\' && !in_double_quote => {
+                    in_single_quote = !in_single_quote;
+                }
+                '"' if prev_char != '\\' && !in_single_quote => {
+                    in_double_quote = !in_double_quote;
+                }
+                ' ' | '\t' if !in_single_quote && !in_double_quote => {
+                    if !current.is_empty() {
+                        args.push(current.clone());
+                        current.clear();
+                    }
+                }
+                _ => {
+                    current.push(c);
+                }
+            }
+            prev_char = c;
+        }
+
+        if !current.is_empty() {
+            args.push(current);
+        }
+
+        args
+    }
 }
 
 impl Tool for BashCommand {
@@ -170,8 +207,8 @@ impl Tool for BashCommand {
                 .stderr(Stdio::piped())
                 .spawn()?
         } else {
-            // Parse command into parts for direct execution
-            let parts: Vec<&str> = args.command.split_whitespace().collect();
+            // Parse command into parts respecting quotes
+            let parts = self.parse_args(&args.command);
             let (cmd, cmd_args) = parts.split_first().ok_or(BashCommandError::EmptyCommand)?;
 
             Command::new(cmd)
@@ -326,5 +363,40 @@ mod tests {
 
         let result = bash.validate_command("ls > output.txt");
         assert!(matches!(result, Err(BashCommandError::ForbiddenPattern(_))));
+    }
+
+    #[test]
+    fn test_parse_args_with_quotes() {
+        let bash = BashCommand::new(PathBuf::from("."));
+
+        // Test simple case without quotes
+        let result = bash.parse_args("ls -la /home");
+        assert_eq!(result, vec!["ls", "-la", "/home"]);
+
+        // Test with double quotes containing spaces
+        let result = bash.parse_args(r#"ls "./Work/Ziverge/OSS work/Agentic Tools""#);
+        assert_eq!(result, vec!["ls", "./Work/Ziverge/OSS work/Agentic Tools"]);
+
+        // Test with single quotes
+        let result = bash.parse_args("grep 'foo bar' file.txt");
+        assert_eq!(result, vec!["grep", "foo bar", "file.txt"]);
+
+        // Test find with path pattern containing spaces
+        let result = bash.parse_args(r#"find . -path "*/OSS work/Agentic Tools/*""#);
+        assert_eq!(
+            result,
+            vec!["find", ".", "-path", "*/OSS work/Agentic Tools/*"]
+        );
+
+        // Test mixed quotes
+        let result = bash.parse_args(r#"cat "file with spaces.txt" 'another file.txt'"#);
+        assert_eq!(
+            result,
+            vec!["cat", "file with spaces.txt", "another file.txt"]
+        );
+
+        // Test multiple spaces without quotes
+        let result = bash.parse_args("ls   -la    /home");
+        assert_eq!(result, vec!["ls", "-la", "/home"]);
     }
 }
