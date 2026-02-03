@@ -20,3 +20,8 @@
 ## Planning 
 
 - Dump a PLAN.md file into a root directory of the current git repo when asked by a user
+
+## Agentic workflow
+
+- Create a TODO.md in the root directory of the git repo if it doesn't exist and the TODO list with the steps from a PLAN.md file.
+- After each succesfully finished task, update the TODO.md accordingly.
