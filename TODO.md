@@ -32,5 +32,5 @@
   - Run input loop: create persistent `ProgressHook` → read line from stdin → call `agent.prompt().with_history().with_hook(hook.clone()).await` → print response → repeat until EOF/Ctrl+C
   - On exit, display cumulative token usage including cache reads
 
-- [ ] **Step 5**: Add directory context to preamble
+- [x] **Step 5**: Add directory context to preamble
   - On startup, run `find . -maxdepth 3 -type f` in target dir to gather file list, include in system prompt so agent knows available files
