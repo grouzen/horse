@@ -10,7 +10,7 @@
   - **ReadFile tool**: accepts `path`, optional `start_line`/`end_line`, resolves paths relative to base dir, rejects `../` traversal, truncates at 50KB or 1000 lines with `[truncated]` note
   - **BashCommand tool**: accepts `command`, validates first word against whitelist (`grep`, `find`, `cat`, `head`, `tail`, `ls`, `tree`, `wc`, `file`, `rg`), rejects pipes `|`, semicolons `;`, `&&`, `||`, backticks, `$()`, redirects `>` `<`, executes with cwd set to base dir, kills after 30 seconds using `tokio::time::timeout`
 
-- [ ] **Step 3**: Implement `ProgressHook` in `src/hooks.rs`
+- [x] **Step 3**: Implement `ProgressHook` in `src/hooks.rs`
   - Implement rig's `PromptHook` trait to:
     - Print `🔧 Calling: {tool}({args})` on tool call
     - Print truncated result or brief error summary on tool result
