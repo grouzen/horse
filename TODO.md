@@ -5,7 +5,7 @@
 - [x] **Step 1**: Update dependencies in `Cargo.toml`
   - Add `tokio` (full features), `clap` (derive), `anyhow`, `serde`/`serde_json`, and `color-eyre`
 
-- [ ] **Step 2**: Create tool module
+- [x] **Step 2**: Create tool module
   - Files: `src/tools/mod.rs`, `src/tools/read_file.rs`, `src/tools/bash.rs`
   - **ReadFile tool**: accepts `path`, optional `start_line`/`end_line`, resolves paths relative to base dir, rejects `../` traversal, truncates at 50KB or 1000 lines with `[truncated]` note
   - **BashCommand tool**: accepts `command`, validates first word against whitelist (`grep`, `find`, `cat`, `head`, `tail`, `ls`, `tree`, `wc`, `file`, `rg`), rejects pipes `|`, semicolons `;`, `&&`, `||`, backticks, `$()`, redirects `>` `<`, executes with cwd set to base dir, kills after 30 seconds using `tokio::time::timeout`
