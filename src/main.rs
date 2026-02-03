@@ -25,6 +25,10 @@ struct Args {
     /// Claude model to use
     #[arg(short, long, default_value = "claude-sonnet-4-0")]
     model: String,
+
+    /// Maximum number of turns for the agent
+    #[arg(short = 't', long, default_value = "20")]
+    max_turns: usize,
 }
 
 /// Load the AGENTS.md file from the target directory if it exists,
@@ -114,6 +118,7 @@ async fn main() -> Result<()> {
     println!("🐴 Horse - Agentic Search REPL");
     println!("📁 Working directory: {}", base_dir.display());
     println!("🤖 Model: {}", args.model);
+    println!("🔄 Max turns: {}", args.max_turns);
     println!();
 
     // Load preamble from AGENTS.md or use default
@@ -126,7 +131,7 @@ async fn main() -> Result<()> {
     let agent = client
         .agent(&args.model)
         .preamble(&preamble)
-        .default_max_turns(10)
+        .default_max_turns(args.max_turns)
         .tool(ReadFile::new(base_dir.clone()))
         .tool(BashCommand::new(base_dir.clone()))
         .build();

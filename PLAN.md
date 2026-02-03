@@ -24,11 +24,11 @@ Implement rig's `PromptHook` trait to:
 
 ### 4. Build REPL loop in `src/main.rs`
 
-- Parse CLI args with clap: `--dir` (defaults to `.`), `--model` (defaults to `claude-sonnet-4-20250514`)
+- Parse CLI args with clap: `--dir` (defaults to `.`), `--model` (defaults to `claude-sonnet-4-0`), `--max-turns` (defaults to `20`)
 - Canonicalize `--dir` to absolute path for consistent path handling
 - Load `AGENTS.md` from target dir into system preamble if present
 - Initialize Anthropic client from `ANTHROPIC_API_KEY` env var
-- Create agent with tools (passing base dir) and preamble describing search assistant role
+- Create agent with tools (passing base dir), preamble describing search assistant role, and configurable max turns
 - Run input loop: read line from stdin → call `agent.prompt().with_history().with_hook().await` → print response → repeat until EOF/Ctrl+C
 
 ### 5. Add directory context to preamble
