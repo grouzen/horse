@@ -1,14 +1,23 @@
 use rig::agent::{HookAction, PromptHook, ToolCallHookAction};
-use rig::completion::CompletionModel;
+use rig::completion::{CompletionModel, CompletionResponse, Usage};
+use std::sync::{Arc, Mutex};
 
 /// A hook that displays tool calls and results in real-time during agent execution.
-/// Skips reasoning tokens by default.
+/// Skips reasoning tokens by default. Tracks token usage including cache reads.
 #[derive(Clone, Debug)]
-pub struct ProgressHook;
+pub struct ProgressHook {
+    total_usage: Arc<Mutex<Usage>>,
+}
 
 impl ProgressHook {
     pub fn new() -> Self {
-        Self
+        Self {
+            total_usage: Arc::new(Mutex::new(Usage::default())),
+        }
+    }
+
+    pub fn total_usage(&self) -> Usage {
+        *self.total_usage.lock().unwrap()
     }
 
     /// Truncate long strings with an ellipsis for display
@@ -59,6 +68,29 @@ where
             println!("   ❌ {display_result}");
         } else {
             println!("   ✅ Result: {display_result}");
+        }
+
+        HookAction::cont()
+    }
+
+    async fn on_completion_response(
+        &self,
+        _prompt: &rig::completion::Message,
+        response: &CompletionResponse<M::Response>,
+    ) -> HookAction {
+        // Extract and accumulate token usage
+        let usage = response.usage;
+        let mut total = self.total_usage.lock().unwrap();
+        *total += usage;
+
+        // Display token usage including cache reads
+        println!(
+            "\n📊 Tokens: in={} out={} total={}",
+            usage.input_tokens, usage.output_tokens, usage.total_tokens
+        );
+
+        if usage.cached_input_tokens > 0 {
+            println!("   💾 Cache read: {} tokens", usage.cached_input_tokens);
         }
 
         HookAction::cont()

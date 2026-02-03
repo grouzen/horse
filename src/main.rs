@@ -56,6 +56,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
     let mut handle = stdin.lock();
     let mut buffer = String::new();
     let mut history = Vec::new();
+    let hook = ProgressHook::new();
 
     loop {
         // Prompt
@@ -70,7 +71,18 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
 
         // Check for EOF (Ctrl+D)
         if bytes_read == 0 {
-            println!("\n👋 Goodbye!");
+            let total = hook.total_usage();
+            println!(
+                "\n📈 Session totals: in={} out={} total={}",
+                total.input_tokens, total.output_tokens, total.total_tokens
+            );
+            if total.cached_input_tokens > 0 {
+                println!(
+                    "   💾 Total cache read: {} tokens",
+                    total.cached_input_tokens
+                );
+            }
+            println!("👋 Goodbye!");
             break;
         }
 
@@ -85,7 +97,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
         match agent
             .prompt(input)
             .with_history(&mut history)
-            .with_hook(ProgressHook::new())
+            .with_hook(hook.clone())
             .await
         {
             Ok(response) => {

@@ -16,6 +16,11 @@
     - Print `🔧 Calling: {tool}({args})` on tool call
     - Print truncated result or brief error summary on tool result
     - Skip reasoning tokens
+    - Track token usage including Anthropic cache reads:
+      - Use `Arc<Mutex<Usage>>` to accumulate tokens across requests
+      - Display per-request token counts (input/output/total) via `on_completion_response` hook
+      - Highlight cache reads with "💾 Cache read: X tokens" when `cached_input_tokens > 0`
+      - Show session totals on exit including cumulative cache reads
 
 - [x] **Step 4**: Build REPL loop in `src/main.rs`
   - Parse CLI args with clap: `--dir` (defaults to `.`), `--model` (defaults to `claude-sonnet-4-20250514`)
@@ -24,7 +29,8 @@
   - Initialize Anthropic client from `ANTHROPIC_API_KEY` env var
   - Create agent with tools (passing base dir) and preamble describing search assistant role
   - Configure `default_max_turns(10)` to allow retries after tool errors
-  - Run input loop: read line from stdin → call `agent.prompt().with_history().with_hook().await` → print response → repeat until EOF/Ctrl+C
+  - Run input loop: create persistent `ProgressHook` → read line from stdin → call `agent.prompt().with_history().with_hook(hook.clone()).await` → print response → repeat until EOF/Ctrl+C
+  - On exit, display cumulative token usage including cache reads
 
 - [ ] **Step 5**: Add directory context to preamble
   - On startup, run `find . -maxdepth 3 -type f` in target dir to gather file list, include in system prompt so agent knows available files

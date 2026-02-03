@@ -21,6 +21,11 @@ Implement rig's `PromptHook` trait to:
 - Print `🔧 Calling: {tool}({args})` on tool call
 - Print truncated result or brief error summary on tool result
 - Skip reasoning tokens
+- Track token usage including Anthropic cache reads:
+  - Use `Arc<Mutex<Usage>>` to accumulate tokens across requests
+  - Display per-request token counts (input/output/total)
+  - Highlight cache reads with "💾 Cache read: X tokens" when `cached_input_tokens > 0`
+  - Show session totals on exit including cumulative cache reads
 
 ### 4. Build REPL loop in `src/main.rs`
 
