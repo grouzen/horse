@@ -66,8 +66,8 @@ impl BashCommand {
             }
         }
 
-        // Split by pipe to validate each command in the pipeline
-        let commands: Vec<&str> = trimmed.split('|').collect();
+        // Split by pipe while respecting quotes
+        let commands = self.split_respecting_quotes(trimmed, '|');
 
         for cmd in commands {
             let cmd = cmd.trim();
@@ -91,6 +91,41 @@ impl BashCommand {
         }
 
         Ok(())
+    }
+
+    /// Split a string by a delimiter while respecting quoted sections
+    fn split_respecting_quotes<'a>(&self, s: &'a str, delimiter: char) -> Vec<&'a str> {
+        let mut result = Vec::new();
+        let mut start = 0;
+        let mut in_single_quote = false;
+        let mut in_double_quote = false;
+        let mut prev_char = '\0';
+
+        for (i, c) in s.char_indices() {
+            // Track quote state
+            if c == '\'' && prev_char != '\\' && !in_double_quote {
+                in_single_quote = !in_single_quote;
+            } else if c == '"' && prev_char != '\\' && !in_single_quote {
+                in_double_quote = !in_double_quote;
+            }
+
+            // Split on delimiter only if not inside quotes
+            if c == delimiter && !in_single_quote && !in_double_quote {
+                result.push(&s[start..i]);
+                start = i + 1;
+            }
+
+            prev_char = c;
+        }
+
+        // Add the remaining part
+        if start < s.len() {
+            result.push(&s[start..]);
+        } else if start == s.len() {
+            result.push("");
+        }
+
+        result
     }
 }
 
@@ -188,5 +223,101 @@ impl Tool for BashCommand {
                 Err(BashCommandError::Timeout(TIMEOUT_SECS))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_split_respecting_quotes() {
+        let bash = BashCommand::new(PathBuf::from("."));
+
+        // Test simple pipe without quotes
+        let result = bash.split_respecting_quotes("ls | grep test", '|');
+        assert_eq!(result, vec!["ls ", " grep test"]);
+
+        // Test pipe inside double quotes (should not split)
+        let result = bash.split_respecting_quotes(r#"grep -E "README|readme" | cat"#, '|');
+        assert_eq!(result, vec![r#"grep -E "README|readme" "#, " cat"]);
+
+        // Test pipe inside single quotes (should not split)
+        let result = bash.split_respecting_quotes(r#"grep -E 'README|readme' | cat"#, '|');
+        assert_eq!(result, vec![r#"grep -E 'README|readme' "#, " cat"]);
+
+        // Test multiple pipes in quotes
+        let result = bash.split_respecting_quotes(
+            r#"find . -type f | grep -E "README|readme|project|overview" | head"#,
+            '|',
+        );
+        assert_eq!(
+            result,
+            vec![
+                "find . -type f ",
+                r#" grep -E "README|readme|project|overview" "#,
+                " head"
+            ]
+        );
+
+        // Test no pipes
+        let result = bash.split_respecting_quotes("ls -la", '|');
+        assert_eq!(result, vec!["ls -la"]);
+    }
+
+    #[test]
+    fn test_validate_command_with_quoted_pipes() {
+        let bash = BashCommand::new(PathBuf::from("."));
+
+        // This should pass - pipes inside quotes should not cause validation issues
+        let result = bash.validate_command(
+            r#"find . -type f | grep -E "README|readme|project|overview|description" | grep -i "ollana""#,
+        );
+        assert!(result.is_ok(), "Expected Ok, got: {result:?}");
+
+        // This should also pass
+        let result = bash.validate_command(r#"grep -E "foo|bar|baz" file.txt"#);
+        assert!(result.is_ok(), "Expected Ok, got: {result:?}");
+
+        // This should fail - "notallowed" is not in whitelist
+        let result = bash.validate_command("notallowed arg1 arg2");
+        assert!(result.is_err());
+        assert!(matches!(
+            result,
+            Err(BashCommandError::CommandNotAllowed(_, _))
+        ));
+    }
+
+    #[test]
+    fn test_validate_allowed_commands() {
+        let bash = BashCommand::new(PathBuf::from("."));
+
+        // Test all allowed commands
+        for cmd in ALLOWED_COMMANDS {
+            let result = bash.validate_command(&format!("{cmd} arg1"));
+            assert!(result.is_ok(), "Command {cmd} should be allowed");
+        }
+
+        // Test piped allowed commands
+        let result = bash.validate_command("find . -name test | grep foo");
+        assert!(result.is_ok());
+
+        let result = bash.validate_command("cat file.txt | head -n 10");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_forbidden_patterns() {
+        let bash = BashCommand::new(PathBuf::from("."));
+
+        // Test forbidden patterns
+        let result = bash.validate_command("ls; rm -rf /");
+        assert!(matches!(result, Err(BashCommandError::ForbiddenPattern(_))));
+
+        let result = bash.validate_command("ls && echo test");
+        assert!(matches!(result, Err(BashCommandError::ForbiddenPattern(_))));
+
+        let result = bash.validate_command("ls > output.txt");
+        assert!(matches!(result, Err(BashCommandError::ForbiddenPattern(_))));
     }
 }
