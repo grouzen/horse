@@ -50,7 +50,7 @@ where
     ) -> ToolCallHookAction {
         // Print tool call notification
         let truncated_args = Self::truncate_display(args, 200);
-        println!("🔧 Calling: {tool_name}({truncated_args})");
+        println!(">> Tool calling: {tool_name}({truncated_args})");
 
         ToolCallHookAction::cont()
     }
@@ -72,9 +72,9 @@ where
 
         // Check if result looks like an error
         if display_result.to_lowercase().contains("error") {
-            println!("   ❌ {display_result}");
+            println!(">> Error: {display_result}");
         } else {
-            println!("   ✅ Result: {display_result}");
+            println!(">> Ok: {display_result}");
         }
 
         HookAction::cont()
@@ -92,12 +92,12 @@ where
 
         // Display token usage including cache reads
         println!(
-            "\n📊 Tokens: in={} out={} total={}",
+            "\n>> Tokens: in={} out={} total={}",
             usage.input_tokens, usage.output_tokens, usage.total_tokens
         );
 
         if usage.cached_input_tokens > 0 {
-            println!("   💾 Cache read: {} tokens", usage.cached_input_tokens);
+            println!(">> Cache read: {} tokens", usage.cached_input_tokens);
         }
 
         HookAction::cont()

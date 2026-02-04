@@ -58,7 +58,7 @@ async fn gather_directory_context(base_dir: &Path) -> Result<String> {
 async fn load_preamble(base_dir: &Path) -> Result<String> {
     let agents_file = base_dir.join("AGENTS.md");
     let mut preamble = if agents_file.exists() {
-        println!("📄 Loading AGENTS.md...");
+        println!(">> Loading AGENTS.md...");
         tokio::fs::read_to_string(&agents_file)
             .await
             .context("Failed to read AGENTS.md")?
@@ -69,7 +69,7 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
     };
 
     // Add directory context
-    println!("📂 Gathering directory structure...");
+    println!(">> Gathering directory structure...");
     match gather_directory_context(base_dir).await {
         Ok(file_list) => {
             preamble.push_str("\n\n## Available Files\n\n");
@@ -77,7 +77,7 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
             preamble.push_str(&file_list);
         }
         Err(e) => {
-            eprintln!("⚠️  Warning: Could not gather directory context: {:#}", e);
+            eprintln!("[!] Warning: Could not gather directory context: {:#}", e);
         }
     }
 
@@ -86,7 +86,7 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
 
 /// Run the interactive REPL loop for the agent.
 async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Result<()> {
-    println!("✨ Ready! Type your queries (Ctrl+C or Ctrl+D to exit)");
+    println!(">> Ready! Type your queries (Ctrl+C or Ctrl+D to exit)");
     println!();
 
     let stdin = io::stdin();
@@ -110,16 +110,16 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
         if bytes_read == 0 {
             let total = hook.total_usage();
             println!(
-                "\n📈 Session totals: in={} out={} total={}",
+                "\n>> Session totals: in={} out={} total={}",
                 total.input_tokens, total.output_tokens, total.total_tokens
             );
             if total.cached_input_tokens > 0 {
                 println!(
-                    "   💾 Total cache read: {} tokens",
+                    ">> Cache Total read: {} tokens",
                     total.cached_input_tokens
                 );
             }
-            println!("👋 Goodbye!");
+            println!(">> Goodbye!");
             break;
         }
 
@@ -141,7 +141,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
                 println!("\n{}\n", response);
             }
             Err(e) => {
-                eprintln!("❌ Error: {:#}\n", e);
+                eprintln!(">> Error: {:#}\n", e);
             }
         }
     }
@@ -164,10 +164,10 @@ async fn main() -> Result<()> {
         .canonicalize()
         .context("Failed to canonicalize target directory")?;
 
-    println!("🐴 Horse - Agentic Search REPL");
-    println!("📁 Working directory: {}", base_dir.display());
-    println!("🤖 Model: {}", args.model);
-    println!("🔄 Max turns: {}", args.max_turns);
+    println!("Horse - Agentic Search REPL");
+    println!("Working directory: {}", base_dir.display());
+    println!("Model: {}", args.model);
+    println!("Max turns: {}", args.max_turns);
     println!();
 
     // Load preamble from AGENTS.md or use default
