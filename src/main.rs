@@ -114,10 +114,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
                 total.input_tokens, total.output_tokens, total.total_tokens
             );
             if total.cached_input_tokens > 0 {
-                println!(
-                    ">> Cache Total read: {} tokens",
-                    total.cached_input_tokens
-                );
+                println!(">> Cache Total read: {} tokens", total.cached_input_tokens);
             }
             println!(">> Goodbye!");
             break;
