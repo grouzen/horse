@@ -46,11 +46,11 @@ async fn gather_directory_context(base_dir: &Path) -> Result<String> {
         .await
         .context("Failed to execute find command")?;
 
-    if !output.status.success() {
-        return Ok("(Directory listing unavailable)".to_string());
+    if output.status.success() {
+        String::from_utf8(output.stdout).context("Failed to parse find output as UTF-8")
+    } else {
+        Ok("(Directory listing unavailable)".to_string())
     }
-
-    String::from_utf8(output.stdout).context("Failed to parse find output as UTF-8")
 }
 
 /// Load the AGENTS.md file from the target directory if it exists,

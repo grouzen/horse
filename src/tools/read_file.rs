@@ -43,20 +43,20 @@ impl ReadFile {
     fn resolve_path(&self, path: &str) -> Result<PathBuf, ReadFileError> {
         // Reject paths containing ".."
         if path.contains("..") {
-            return Err(ReadFileError::PathTraversal(path.to_string()));
+            Err(ReadFileError::PathTraversal(path.to_string()))
+        } else {
+            let resolved = self.base_dir.join(path);
+
+            // Canonicalize and verify it's within base_dir
+            let canonical = resolved.canonicalize()?;
+            let base_canonical = self.base_dir.canonicalize()?;
+
+            if canonical.starts_with(&base_canonical) {
+                Ok(canonical)
+            } else {
+                Err(ReadFileError::OutsideBaseDir)
+            }
         }
-
-        let resolved = self.base_dir.join(path);
-
-        // Canonicalize and verify it's within base_dir
-        let canonical = resolved.canonicalize()?;
-        let base_canonical = self.base_dir.canonicalize()?;
-
-        if !canonical.starts_with(&base_canonical) {
-            return Err(ReadFileError::OutsideBaseDir);
-        }
-
-        Ok(canonical)
     }
 }
 

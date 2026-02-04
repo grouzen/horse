@@ -55,42 +55,43 @@ impl BashCommand {
 
     fn validate_command(&self, command: &str) -> Result<(), BashCommandError> {
         let trimmed = command.trim();
+
         if trimmed.is_empty() {
-            return Err(BashCommandError::EmptyCommand);
-        }
+            Err(BashCommandError::EmptyCommand)
+        } else {
+            // Check for forbidden patterns
+            if let Some(pattern) = FORBIDDEN_PATTERNS.iter().find(|p| trimmed.contains(*p)) {
+                Err(BashCommandError::ForbiddenPattern(pattern.to_string()))
+            } else {
+                // Split by pipe while respecting quotes
+                let commands = self.split_respecting_quotes(trimmed, '|');
 
-        // Check for forbidden patterns
-        for pattern in FORBIDDEN_PATTERNS {
-            if trimmed.contains(pattern) {
-                return Err(BashCommandError::ForbiddenPattern(pattern.to_string()));
+                let invalid_cmd = commands
+                    .iter()
+                    .map(|cmd| cmd.trim())
+                    .filter(|cmd| !cmd.is_empty())
+                    .find_map(|cmd| {
+                        // Extract the first word (command name)
+                        let first_word = cmd.split_whitespace().next()?;
+
+                        // Check if command is in whitelist
+                        if !ALLOWED_COMMANDS.contains(&first_word) {
+                            Some(first_word.to_string())
+                        } else {
+                            None
+                        }
+                    });
+
+                if let Some(invalid) = invalid_cmd {
+                    Err(BashCommandError::CommandNotAllowed(
+                        invalid,
+                        ALLOWED_COMMANDS.join(", "),
+                    ))
+                } else {
+                    Ok(())
+                }
             }
         }
-
-        // Split by pipe while respecting quotes
-        let commands = self.split_respecting_quotes(trimmed, '|');
-
-        for cmd in commands {
-            let cmd = cmd.trim();
-            if cmd.is_empty() {
-                continue;
-            }
-
-            // Extract the first word (command name)
-            let first_word = cmd
-                .split_whitespace()
-                .next()
-                .ok_or(BashCommandError::EmptyCommand)?;
-
-            // Check if command is in whitelist
-            if !ALLOWED_COMMANDS.contains(&first_word) {
-                return Err(BashCommandError::CommandNotAllowed(
-                    first_word.to_string(),
-                    ALLOWED_COMMANDS.join(", "),
-                ));
-            }
-        }
-
-        Ok(())
     }
 
     /// Split a string by a delimiter while respecting quoted sections
