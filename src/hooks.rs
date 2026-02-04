@@ -100,6 +100,12 @@ where
             println!(">> Cache read: {} tokens", usage.cached_input_tokens);
         }
 
+        // Display session total
+        println!(
+            ">> Total tokens: in={} out={} total={}",
+            total.input_tokens, total.output_tokens, total.total_tokens
+        );
+
         HookAction::cont()
     }
 }
