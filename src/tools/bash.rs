@@ -197,8 +197,14 @@ impl Tool for BashCommand {
     async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
         self.validate_command(&args.command)?;
 
-        // If command contains pipe, use shell; otherwise execute directly
-        let mut child = if args.command.contains('|') {
+        // If command contains pipe or glob patterns, use shell; otherwise execute directly
+        let needs_shell = args.command.contains('|')
+            || args.command.contains('*')
+            || args.command.contains('?')
+            || args.command.contains('[')
+            || args.command.contains('{');
+
+        let mut child = if needs_shell {
             Command::new("sh")
                 .arg("-c")
                 .arg(&args.command)
