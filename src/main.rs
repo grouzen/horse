@@ -16,7 +16,7 @@ use tools::{BashCommand, ReadFile};
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
-#[command(about = "An agentic search REPL powered by Claude")]
+#[command(about = "An agentic RAG for intelligent directory exploration")]
 struct Args {
     /// Target directory to search and execute commands in
     #[arg(short, long, default_value = ".")]
