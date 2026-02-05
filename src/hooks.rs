@@ -1,3 +1,4 @@
+use crate::tools::Tools;
 use rig::agent::{HookAction, PromptHook, ToolCallHookAction};
 use rig::completion::{CompletionModel, CompletionResponse, Usage};
 use std::sync::{Arc, Mutex};
@@ -16,35 +17,13 @@ impl ProgressHook {
         }
     }
 
-    pub fn total_usage(&self) -> Usage {
+    pub fn get_total_usage(&self) -> Usage {
         *self.total_usage.lock().unwrap()
     }
 
-    /// Format a number with k suffix for values >= 1000
-    fn format_token_count(count: u64) -> String {
-        if count < 1000 {
-            count.to_string()
-        } else {
-            let k_value = count as f64 / 1000.0;
-            format!("{:.1}k", k_value)
-        }
-    }
-
-    /// Generate the prompt string with token usage information
-    pub fn format_prompt(&self) -> String {
-        let total = self.total_usage();
-        let input_str = Self::format_token_count(total.input_tokens);
-        let output_str = Self::format_token_count(total.output_tokens);
-
-        if total.cached_input_tokens > 0 {
-            let cached_str = Self::format_token_count(total.cached_input_tokens);
-            format!(
-                "in {} ({} cached), out {}> ",
-                input_str, cached_str, output_str
-            )
-        } else {
-            format!("in {}, out {}> ", input_str, output_str)
-        }
+    pub fn set_total_usage(&self, delta: Usage) {
+        let mut total = self.total_usage.lock().unwrap();
+        *total += delta;
     }
 
     /// Truncate long strings with an ellipsis for display
@@ -75,9 +54,13 @@ where
         _internal_call_id: &str,
         args: &str,
     ) -> ToolCallHookAction {
-        // Print tool call notification
-        let truncated_args = Self::truncate_display(args, 200);
-        println!("\n>> Tool calling: {tool_name}({truncated_args})");
+        // Extract relevant argument based on tool type
+        let display_args = Tools::try_from(tool_name)
+            .map(|tool| tool.extract_display_args(args))
+            .unwrap_or_else(|_| args.to_string());
+
+        let truncated_args = Self::truncate_display(&display_args, 200);
+        println!("\n>> Tool call: {tool_name}({truncated_args})");
 
         ToolCallHookAction::cont()
     }
@@ -90,18 +73,10 @@ where
         _args: &str,
         result: &str,
     ) -> HookAction {
-        // Print truncated result or error summary
-        let display_result = if result.len() > 500 {
-            Self::truncate_display(result, 500)
-        } else {
-            result.to_string()
-        };
-
-        // Check if result looks like an error
-        if display_result.to_lowercase().contains("error") {
-            println!(">> Error: {display_result}");
-        } else {
-            println!(">> Ok: {display_result}");
+        // Check if result contains an error and display it
+        if result.to_lowercase().contains("error") {
+            let truncated_result = Self::truncate_display(result, 500);
+            println!(">> Error: {truncated_result}");
         }
 
         HookAction::cont()
@@ -113,9 +88,7 @@ where
         response: &CompletionResponse<M::Response>,
     ) -> HookAction {
         // Extract and accumulate token usage
-        let usage = response.usage;
-        let mut total = self.total_usage.lock().unwrap();
-        *total += usage;
+        self.set_total_usage(response.usage);
 
         HookAction::cont()
     }

@@ -12,7 +12,7 @@ const MAX_LINES: usize = 1000;
 #[derive(Deserialize)]
 pub struct ReadFileArgs {
     /// The path to the file to read, relative to the base directory
-    path: String,
+    pub path: String,
     /// Optional starting line number (1-indexed)
     start_line: Option<usize>,
     /// Optional ending line number (1-indexed, inclusive)

@@ -23,7 +23,7 @@ const FORBIDDEN_PATTERNS: &[&str] = &[";", "&&", "||", "`", "$(", ">", "<", ">>"
 #[derive(Deserialize)]
 pub struct BashCommandArgs {
     /// The command to execute
-    command: String,
+    pub command: String,
 }
 
 #[derive(Debug, Error)]

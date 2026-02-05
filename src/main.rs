@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use rig::agent::{Agent, AgentBuilder};
 use rig::client::ProviderClient;
-use rig::completion::Prompt;
+use rig::completion::{Prompt, Usage};
 use rig::providers::anthropic;
 
 mod hooks;
@@ -29,6 +29,32 @@ struct Args {
     /// Maximum number of turns for the agent
     #[arg(short = 't', long, default_value = "20")]
     max_turns: usize,
+}
+
+/// Format a number with k suffix for values >= 1000
+fn format_token_count(count: u64) -> String {
+    if count < 1000 {
+        count.to_string()
+    } else {
+        let k_value = count as f64 / 1000.0;
+        format!("{:.1}k", k_value)
+    }
+}
+
+/// Generate the prompt string with token usage information
+fn format_prompt(usage: Usage) -> String {
+    let input_str = format_token_count(usage.input_tokens);
+    let output_str = format_token_count(usage.output_tokens);
+
+    if usage.cached_input_tokens > 0 {
+        let cached_str = format_token_count(usage.cached_input_tokens);
+        format!(
+            "in {} ({} cached), out {}> ",
+            input_str, cached_str, output_str
+        )
+    } else {
+        format!("in {}, out {}> ", input_str, output_str)
+    }
 }
 
 /// Gather directory structure by running `find` command
@@ -97,7 +123,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
 
     loop {
         // Prompt with token usage
-        print!("{}", hook.format_prompt());
+        print!("{}", format_prompt(hook.get_total_usage()));
         io::stdout().flush()?;
 
         // Read line
@@ -153,7 +179,7 @@ async fn main() -> Result<()> {
         .canonicalize()
         .context("Failed to canonicalize target directory")?;
 
-    println!("Horse - Agentic Search REPL");
+    println!("Horse - An read-only agentic RAG for intelligent directory exploration");
     println!("Working directory: {}", base_dir.display());
     println!("Model: {}", args.model);
     println!("Max turns: {}", args.max_turns);
