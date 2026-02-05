@@ -3,8 +3,8 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use rig::agent::Agent;
-use rig::client::{CompletionClient, ProviderClient};
+use rig::agent::{Agent, AgentBuilder};
+use rig::client::ProviderClient;
 use rig::completion::Prompt;
 use rig::providers::anthropic;
 
@@ -165,9 +165,12 @@ async fn main() -> Result<()> {
     // Initialize Anthropic client (from_env reads ANTHROPIC_API_KEY automatically)
     let client = anthropic::Client::from_env();
 
+    let model =
+        anthropic::completion::CompletionModel::new(client, &args.model).with_prompt_caching();
+
     // Create agent with tools and preamble
-    let agent = client
-        .agent(&args.model)
+
+    let agent = AgentBuilder::new(model)
         .preamble(&preamble)
         .default_max_turns(args.max_turns)
         .tool(ReadFile::new(base_dir.clone()))
