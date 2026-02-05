@@ -153,7 +153,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
             .await
         {
             Ok(response) => {
-                println!("\n{}\n", response);
+                horse::markdown::render_markdown(&response);
             }
             Err(e) => {
                 eprintln!(">> Error: {:#}\n", e);
