@@ -96,8 +96,8 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
     let hook = ProgressHook::new();
 
     loop {
-        // Prompt
-        print!("> ");
+        // Prompt with token usage
+        print!("{}", hook.format_prompt());
         io::stdout().flush()?;
 
         // Read line
@@ -108,15 +108,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
 
         // Check for EOF (Ctrl+D)
         if bytes_read == 0 {
-            let total = hook.total_usage();
-            println!(
-                "\n>> Session totals: in={} out={} total={}",
-                total.input_tokens, total.output_tokens, total.total_tokens
-            );
-            if total.cached_input_tokens > 0 {
-                println!(">> Cache Total read: {} tokens", total.cached_input_tokens);
-            }
-            println!(">> Goodbye!");
+            println!("\n>> Goodbye!");
             break;
         }
 

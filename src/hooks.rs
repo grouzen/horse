@@ -20,6 +20,33 @@ impl ProgressHook {
         *self.total_usage.lock().unwrap()
     }
 
+    /// Format a number with k suffix for values >= 1000
+    fn format_token_count(count: u64) -> String {
+        if count < 1000 {
+            count.to_string()
+        } else {
+            let k_value = count as f64 / 1000.0;
+            format!("{:.1}k", k_value)
+        }
+    }
+
+    /// Generate the prompt string with token usage information
+    pub fn format_prompt(&self) -> String {
+        let total = self.total_usage();
+        let input_str = Self::format_token_count(total.input_tokens);
+        let output_str = Self::format_token_count(total.output_tokens);
+
+        if total.cached_input_tokens > 0 {
+            let cached_str = Self::format_token_count(total.cached_input_tokens);
+            format!(
+                "in {} ({} cached), out {}> ",
+                input_str, cached_str, output_str
+            )
+        } else {
+            format!("in {}, out {}> ", input_str, output_str)
+        }
+    }
+
     /// Truncate long strings with an ellipsis for display
     fn truncate_display(s: &str, max_len: usize) -> String {
         if s.len() <= max_len {
@@ -50,7 +77,7 @@ where
     ) -> ToolCallHookAction {
         // Print tool call notification
         let truncated_args = Self::truncate_display(args, 200);
-        println!(">> Tool calling: {tool_name}({truncated_args})");
+        println!("\n>> Tool calling: {tool_name}({truncated_args})");
 
         ToolCallHookAction::cont()
     }
@@ -89,22 +116,6 @@ where
         let usage = response.usage;
         let mut total = self.total_usage.lock().unwrap();
         *total += usage;
-
-        // Display token usage including cache reads
-        println!(
-            "\n>> Tokens: in={} out={} total={}",
-            usage.input_tokens, usage.output_tokens, usage.total_tokens
-        );
-
-        if usage.cached_input_tokens > 0 {
-            println!(">> Cache read: {} tokens", usage.cached_input_tokens);
-        }
-
-        // Display session total
-        println!(
-            ">> Total tokens: in={} out={} total={}",
-            total.input_tokens, total.output_tokens, total.total_tokens
-        );
 
         HookAction::cont()
     }
