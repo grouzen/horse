@@ -6,38 +6,38 @@
   - Add `owo-colors = "4"` to dependencies
   - Change `termimad = { version = "0.32", default-features = false }` to `termimad = "0.32"` (enable color support)
 
-- [ ] **Step 2: Create Color Utilities Module: `src/colors.rs`**
+- [x] **Step 2: Create Color Utilities Module: `src/colors.rs`**
   - Create a new file with helper functions for the color scheme
   - Import `owo_colors::OwoColorize` trait
   - Define helper functions:
-    - `format_prompt_number()` - cyan/blue for token counts
-    - `format_debug()` - dark gray for tool calls
-    - `format_error()` - bright red
-    - `format_warning()` - dim magenta or orange
-    - `format_success()` - bright green
-    - `format_status()` - dim green for loading/ready messages
-    - `format_dim()` - gray for normal text in prompt
+    - `color_prompt_number()` - cyan/blue for token counts
+    - `color_debug()` - dark gray for tool calls
+    - `color_error()` - bright red
+    - `color_warning()` - dim magenta or orange
+    - `color_success()` - bright green
+    - `color_status()` - dim green for loading/ready messages
+    - `color_dim()` - gray for normal text in prompt
 
-- [ ] **Step 3: Update `src/lib.rs`**
+- [x] **Step 3: Update `src/lib.rs`**
   - Export the new colors module to make it available throughout the codebase
 
 - [ ] **Step 4: Modify `src/main.rs`**
   - Colorize the following output locations:
-    - Line 87: `">> Loading AGENTS.md..."` - use `format_status()`
-    - Line 98: `">> Gathering directory structure..."` - use `format_status()`
-    - Line 106: `"[!] Warning: ..."` - use `format_warning()`
-    - Line 115: `">> Ready! ..."` - use `format_success()`
+    - Line 87: `">> Loading AGENTS.md..."` - use `color_status()`
+    - Line 98: `">> Gathering directory structure..."` - use `color_status()`
+    - Line 106: `"[!] Warning: ..."` - use `color_warning()`
+    - Line 115: `">> Ready! ..."` - use `color_success()`
     - Line 126: `format_prompt()` - numbers in cyan, text in gray using color helpers
-    - Line 137: `">> Goodbye!"` - use `format_status()`
-    - Line 159: `">> Error: ..."` - use `format_error()`
-    - Line 171: `"Warning: ..."` - use `format_warning()`
+    - Line 137: `">> Goodbye!"` - use `color_status()`
+    - Line 159: `">> Error: ..."` - use `color_error()`
+    - Line 171: `"Warning: ..."` - use `color_warning()`
     - Lines 182-186: Startup info - keep default or subtle dim
     - Line 188+: Update `format_prompt()` function to apply cyan to numeric values and gray to separators
 
 - [ ] **Step 5: Modify `src/hooks.rs`**
   - Colorize the following output locations:
-    - Line 63: `">> Tool call: ..."` - use `format_debug()` for dim yellow/dark gray
-    - Line 79: `">> Error: ..."` - use `format_error()` for bright red
+    - Line 63: `">> Tool call: ..."` - use `color_debug()` for dim yellow/dark gray
+    - Line 79: `">> Error: ..."` - use `color_error()` for bright red
 
 - [ ] **Step 6: Verify `src/markdown.rs`**
   - Test that markdown rendering uses termimad's color scheme automatically
