@@ -14,7 +14,7 @@ use tokio::time::timeout;
 const TIMEOUT_SECS: u64 = 30;
 
 const ALLOWED_COMMANDS: &[&str] = &[
-    "grep", "find", "cat", "head", "tail", "ls", "tree", "wc", "file", "rg",
+    "grep", "find", "cat", "head", "tail", "ls", "tree", "wc", "file", "rg", "rga",
 ];
 
 // Allow pipes but block more dangerous patterns
