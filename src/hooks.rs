@@ -1,3 +1,4 @@
+use crate::colors;
 use crate::tools::Tools;
 use rig::agent::{HookAction, PromptHook, ToolCallHookAction};
 use rig::completion::{CompletionModel, CompletionResponse, Usage};
@@ -60,7 +61,10 @@ where
             .unwrap_or_else(|_| args.to_string());
 
         let truncated_args = Self::truncate_display(&display_args, 200);
-        println!("\n>> Tool call: {tool_name}({truncated_args})");
+        println!(
+            "{}",
+            colors::color_debug(format!("\n>> Tool call: {tool_name}({truncated_args})"))
+        );
 
         ToolCallHookAction::cont()
     }
@@ -73,10 +77,14 @@ where
         _args: &str,
         result: &str,
     ) -> HookAction {
-        // Check if result contains an error and display it
-        if result.to_lowercase().contains("error") {
+        // Check if result contains an ToolCallError and display it
+        // TODO: would be nice to have a better way to detect errors (open an issue in rig repo?)
+        if result.contains("ToolCallError") {
             let truncated_result = Self::truncate_display(result, 500);
-            println!(">> Error: {truncated_result}");
+            println!(
+                "{}",
+                colors::color_error(format!(">> Error: {truncated_result}"))
+            );
         }
 
         HookAction::cont()

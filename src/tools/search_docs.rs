@@ -58,7 +58,12 @@ impl Tool for SearchDocs {
     async fn definition(&self, _prompt: String) -> ToolDefinition {
         ToolDefinition {
             name: Self::NAME.to_string(),
-            description: "Search through documents (PDFs, Word docs, Excel, etc.) using ripgrep-all. Automatically handles binary formats and extracts text. Use this when you need to find content in non-text files.".to_string(),
+            description:
+                "Search through documents (PDFs, Word docs, Excel, etc.) using ripgrep-all. \
+                Automatically handles binary formats and extracts text. \
+                Use this when you need to find content in non-text files. \
+                Do not use it until other tools have been tried."
+                    .to_string(),
             parameters: json!({
                 "type": "object",
                 "properties": {
