@@ -21,7 +21,7 @@
 - [x] **Step 3: Update `src/lib.rs`**
   - Export the new colors module to make it available throughout the codebase
 
-- [ ] **Step 4: Modify `src/main.rs`**
+- [x] **Step 4: Modify `src/main.rs`**
   - Colorize the following output locations:
     - Line 87: `">> Loading AGENTS.md..."` - use `color_status()`
     - Line 98: `">> Gathering directory structure..."` - use `color_status()`
@@ -34,7 +34,7 @@
     - Lines 182-186: Startup info - keep default or subtle dim
     - Line 188+: Update `format_prompt()` function to apply cyan to numeric values and gray to separators
 
-- [ ] **Step 5: Modify `src/hooks.rs`**
+- [x] **Step 5: Modify `src/hooks.rs`**
   - Colorize the following output locations:
     - Line 63: `">> Tool call: ..."` - use `color_debug()` for dim yellow/dark gray
     - Line 79: `">> Error: ..."` - use `color_error()` for bright red

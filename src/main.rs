@@ -8,6 +8,7 @@ use rig::client::ProviderClient;
 use rig::completion::{Prompt, Usage};
 use rig::providers::anthropic;
 
+mod colors;
 mod hooks;
 mod tools;
 
@@ -49,11 +50,22 @@ fn format_prompt(usage: Usage) -> String {
     if usage.cached_input_tokens > 0 {
         let cached_str = format_token_count(usage.cached_input_tokens);
         format!(
-            "in {} ({} cached), out {}> ",
-            input_str, cached_str, output_str
+            "{} {} ({} {}), {} {}> ",
+            colors::color_dim("in"),
+            colors::color_prompt_number(&input_str),
+            colors::color_prompt_number(&cached_str),
+            colors::color_dim("cached"),
+            colors::color_dim("out"),
+            colors::color_prompt_number(&output_str)
         )
     } else {
-        format!("in {}, out {}> ", input_str, output_str)
+        format!(
+            "{} {}, {} {}> ",
+            colors::color_dim("in"),
+            colors::color_prompt_number(&input_str),
+            colors::color_dim("out"),
+            colors::color_prompt_number(&output_str)
+        )
     }
 }
 
@@ -84,7 +96,7 @@ async fn gather_directory_context(base_dir: &Path) -> Result<String> {
 async fn load_preamble(base_dir: &Path) -> Result<String> {
     let agents_file = base_dir.join("AGENTS.md");
     let mut preamble = if agents_file.exists() {
-        println!(">> Loading AGENTS.md...");
+        println!("{}", colors::color_status(">> Loading AGENTS.md..."));
         tokio::fs::read_to_string(&agents_file)
             .await
             .context("Failed to read AGENTS.md")?
@@ -95,7 +107,10 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
     };
 
     // Add directory context
-    println!(">> Gathering directory structure...");
+    println!(
+        "{}",
+        colors::color_status(">> Gathering directory structure...")
+    );
     match gather_directory_context(base_dir).await {
         Ok(file_list) => {
             preamble.push_str("\n\n## Available Files\n\n");
@@ -103,7 +118,13 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
             preamble.push_str(&file_list);
         }
         Err(e) => {
-            eprintln!("[!] Warning: Could not gather directory context: {:#}", e);
+            eprintln!(
+                "{}",
+                colors::color_warning(format!(
+                    "[!] Warning: Could not gather directory context: {:#}",
+                    e
+                ))
+            );
         }
     }
 
@@ -112,7 +133,10 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
 
 /// Run the interactive REPL loop for the agent.
 async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Result<()> {
-    println!(">> Ready! Type your queries (Ctrl+C or Ctrl+D to exit)");
+    println!(
+        "{}",
+        colors::color_success(">> Ready! Type your queries (Ctrl+C or Ctrl+D to exit)")
+    );
     println!();
 
     let stdin = io::stdin();
@@ -134,7 +158,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
 
         // Check for EOF (Ctrl+D)
         if bytes_read == 0 {
-            println!("\n>> Goodbye!");
+            println!("\n{}", colors::color_status(">> Goodbye!"));
             break;
         }
 
@@ -156,7 +180,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
                 horse::markdown::render_markdown(&response);
             }
             Err(e) => {
-                eprintln!(">> Error: {:#}\n", e);
+                eprintln!("{}", colors::color_error(format!(">> Error: {:#}\n", e)));
             }
         }
     }
@@ -168,7 +192,10 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
 async fn main() -> Result<()> {
     // Install color-eyre without using `?` since it returns ErrReport
     if let Err(e) = color_eyre::install() {
-        eprintln!("Warning: Failed to install color-eyre: {}", e);
+        eprintln!(
+            "{}",
+            colors::color_warning(format!("Warning: Failed to install color-eyre: {}", e))
+        );
     }
 
     let args = Args::parse();
