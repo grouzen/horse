@@ -129,21 +129,32 @@ impl BashCommand {
         result
     }
 
-    /// Parse a command string into parts while respecting quotes
+    /// Parse a command string into parts while respecting quotes and backslash escapes
     /// Returns a vector of argument strings with quotes removed
     fn parse_args(&self, command: &str) -> Vec<String> {
         let mut args = Vec::new();
         let mut current = String::new();
         let mut in_single_quote = false;
         let mut in_double_quote = false;
-        let mut prev_char = '\0';
+        let mut escape_next = false;
 
         for c in command.chars() {
+            if escape_next {
+                // Previous char was backslash, add this char literally
+                current.push(c);
+                escape_next = false;
+                continue;
+            }
+
             match c {
-                '\'' if prev_char != '\\' && !in_double_quote => {
+                '\\' if !in_single_quote => {
+                    // Backslash escapes the next character (except in single quotes)
+                    escape_next = true;
+                }
+                '\'' if !in_double_quote => {
                     in_single_quote = !in_single_quote;
                 }
-                '"' if prev_char != '\\' && !in_single_quote => {
+                '"' if !in_single_quote => {
                     in_double_quote = !in_double_quote;
                 }
                 ' ' | '\t' if !in_single_quote && !in_double_quote => {
@@ -156,7 +167,6 @@ impl BashCommand {
                     current.push(c);
                 }
             }
-            prev_char = c;
         }
 
         if !current.is_empty() {
@@ -322,7 +332,7 @@ mod tests {
 
         // This should pass - pipes inside quotes should not cause validation issues
         let result = bash.validate_command(
-            r#"find . -type f | grep -E "README|readme|project|overview|description" | grep -i "ollana""#,
+            r#"find . -type f | grep -E "README|readme|project|overview|description" | grep -i "project""#,
         );
         assert!(result.is_ok(), "Expected Ok, got: {result:?}");
 
@@ -381,18 +391,18 @@ mod tests {
         assert_eq!(result, vec!["ls", "-la", "/home"]);
 
         // Test with double quotes containing spaces
-        let result = bash.parse_args(r#"ls "./Work/Ziverge/OSS work/Agentic Tools""#);
-        assert_eq!(result, vec!["ls", "./Work/Ziverge/OSS work/Agentic Tools"]);
+        let result = bash.parse_args(r#"ls "./Projects/Company/My Project""#);
+        assert_eq!(result, vec!["ls", "./Projects/Company/My Project"]);
 
         // Test with single quotes
         let result = bash.parse_args("grep 'foo bar' file.txt");
         assert_eq!(result, vec!["grep", "foo bar", "file.txt"]);
 
         // Test find with path pattern containing spaces
-        let result = bash.parse_args(r#"find . -path "*/OSS work/Agentic Tools/*""#);
+        let result = bash.parse_args(r#"find . -path "*/Projects/My Project/*""#);
         assert_eq!(
             result,
-            vec!["find", ".", "-path", "*/OSS work/Agentic Tools/*"]
+            vec!["find", ".", "-path", "*/Projects/My Project/*"]
         );
 
         // Test mixed quotes
@@ -405,5 +415,28 @@ mod tests {
         // Test multiple spaces without quotes
         let result = bash.parse_args("ls   -la    /home");
         assert_eq!(result, vec!["ls", "-la", "/home"]);
+    }
+
+    #[test]
+    fn test_parse_args_with_backslashed_spaces() {
+        let bash = BashCommand::new(PathBuf::from("."));
+
+        // Test backslash-escaped spaces
+        let result = bash.parse_args(r"ls ./Documents/Work/Reports/Main\ Street\ 123/");
+        assert_eq!(
+            result,
+            vec!["ls", "./Documents/Work/Reports/Main Street 123/"]
+        );
+
+        // Test mixed backslash escapes and quotes
+        let result = bash.parse_args(r#"cat file\ with\ spaces.txt "another file.txt""#);
+        assert_eq!(
+            result,
+            vec!["cat", "file with spaces.txt", "another file.txt"]
+        );
+
+        // Test backslash escaping other characters
+        let result = bash.parse_args(r"grep foo\ \*\ bar file.txt");
+        assert_eq!(result, vec!["grep", "foo * bar", "file.txt"]);
     }
 }
