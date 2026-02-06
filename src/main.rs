@@ -17,7 +17,7 @@ use tools::{BashCommand, ReadFile, SearchDocs};
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
-#[command(about = "An agentic RAG for intelligent directory exploration")]
+#[command(about = "An agentic search assistant for intelligent directory exploration")]
 struct Args {
     /// Target directory to search and execute commands in
     #[arg(short, long, default_value = ".")]
@@ -206,10 +206,18 @@ async fn main() -> Result<()> {
         .canonicalize()
         .context("Failed to canonicalize target directory")?;
 
-    println!("Horse - An read-only agentic RAG for intelligent directory exploration");
-    println!("Working directory: {}", base_dir.display());
-    println!("Model: {}", args.model);
-    println!("Max turns: {}", args.max_turns);
+    println!(
+        "Horse - {}",
+        colors::color_success(
+            "An read-only agentic search assistant for intelligent directory exploration"
+        )
+    );
+    println!(
+        "Working directory: {}",
+        colors::color_status(base_dir.display())
+    );
+    println!("Model: {}", colors::color_status(&args.model));
+    println!("Max turns: {}", colors::color_status(args.max_turns));
     println!();
 
     // Load preamble from AGENTS.md or use default
