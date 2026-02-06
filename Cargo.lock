@@ -697,6 +697,7 @@ dependencies = [
  "anyhow",
  "clap",
  "color-eyre",
+ "owo-colors",
  "rig-core",
  "serde",
  "serde_json",
