@@ -2,15 +2,18 @@
 
 mod bash;
 mod read_file;
+mod search_docs;
 
 pub use bash::{BashCommand, BashCommandArgs};
 pub use read_file::{ReadFile, ReadFileArgs};
+pub use search_docs::{SearchDocs, SearchDocsArgs};
 
 /// Available tool types
 #[derive(Debug, Clone, Copy)]
 pub enum Tools {
     Bash,
     ReadFile,
+    SearchDocs,
 }
 
 impl TryFrom<&str> for Tools {
@@ -20,6 +23,7 @@ impl TryFrom<&str> for Tools {
         match value {
             "bash" => Ok(Tools::Bash),
             "read_file" => Ok(Tools::ReadFile),
+            "search_docs" => Ok(Tools::SearchDocs),
             _ => Err(()),
         }
     }
@@ -34,6 +38,12 @@ impl Tools {
                 .unwrap_or_else(|_| args.to_string()),
             Tools::ReadFile => serde_json::from_str::<ReadFileArgs>(args)
                 .map(|parsed| parsed.path)
+                .unwrap_or_else(|_| args.to_string()),
+            Tools::SearchDocs => serde_json::from_str::<SearchDocsArgs>(args)
+                .map(|parsed| {
+                    let path = parsed.path.as_deref().unwrap_or(".");
+                    format!("{} in {}", parsed.query, path)
+                })
                 .unwrap_or_else(|_| args.to_string()),
         }
     }

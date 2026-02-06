@@ -12,7 +12,7 @@ mod hooks;
 mod tools;
 
 use hooks::ProgressHook;
-use tools::{BashCommand, ReadFile};
+use tools::{BashCommand, ReadFile, SearchDocs};
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
@@ -201,6 +201,7 @@ async fn main() -> Result<()> {
         .default_max_turns(args.max_turns)
         .tool(ReadFile::new(base_dir.clone()))
         .tool(BashCommand::new(base_dir.clone()))
+        .tool(SearchDocs::new(base_dir.clone()))
         .build();
 
     // Run the REPL loop
