@@ -77,8 +77,9 @@ where
         _args: &str,
         result: &str,
     ) -> HookAction {
-        // Check if result contains an error and display it
-        if result.to_lowercase().contains("error") {
+        // Check if result contains an ToolCallError and display it
+        // TODO: would be nice to have a better way to detect errors (open an issue in rig repo?)
+        if result.contains("ToolCallError") {
             let truncated_result = Self::truncate_display(result, 500);
             println!(
                 "{}",
