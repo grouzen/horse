@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 use anyhow::Result;
 use rig::agent::{Agent, AgentBuilder};
 use rig::client::{CompletionClient, ProviderClient};
@@ -48,6 +49,7 @@ impl Provider for OllamaProvider {
     }
 }
 
+#[allow(dead_code)]
 struct OllamaAgentWrapper {
     agent: Agent<ollama::CompletionModel>,
 }

@@ -2,16 +2,42 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use rig::agent::AgentBuilder;
+use rig::agent::{Agent, AgentBuilder};
 use rig::client::ProviderClient;
+use rig::completion::Prompt;
 use rig::providers::anthropic;
 
 mod agent;
+mod config;
 mod console;
+mod providers;
 
 use agent::tools::{BashCommand, ReadFile, SearchDocs};
+use providers::AgentWrapper;
 
 use crate::console::{colors, repl::Repl};
+
+// Temporary wrapper until step 4 is implemented
+struct TempAgentWrapper {
+    agent: Agent<anthropic::completion::CompletionModel>,
+}
+
+#[async_trait::async_trait]
+impl AgentWrapper for TempAgentWrapper {
+    async fn prompt(
+        &mut self,
+        input: String,
+        history: &mut Vec<rig::completion::Message>,
+        hook: agent::hooks::ProgressHook,
+    ) -> Result<String> {
+        self.agent
+            .prompt(input)
+            .with_hook(hook)
+            .with_history(history)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
@@ -144,7 +170,8 @@ async fn main() -> Result<()> {
         .tool(SearchDocs::new(base_dir.clone()))
         .build();
 
-    let mut repl = Repl::new(agent);
+    let wrapped_agent = Box::new(TempAgentWrapper { agent });
+    let mut repl = Repl::new(wrapped_agent);
 
     // Run the REPL loop
     repl.run().await

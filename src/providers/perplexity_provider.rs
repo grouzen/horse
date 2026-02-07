@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 use anyhow::Result;
 use rig::agent::{Agent, AgentBuilder};
 use rig::client::{CompletionClient, ProviderClient};
@@ -45,6 +46,7 @@ impl Provider for PerplexityProvider {
     }
 }
 
+#[allow(dead_code)]
 struct PerplexityAgentWrapper {
     agent: Agent<perplexity::CompletionModel>,
 }

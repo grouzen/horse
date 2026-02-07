@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 use anyhow::Result;
 use rig::agent::{Agent, AgentBuilder};
 use rig::client::{CompletionClient, ProviderClient};
@@ -45,6 +46,7 @@ impl Provider for MistralProvider {
     }
 }
 
+#[allow(dead_code)]
 struct MistralAgentWrapper {
     agent: Agent<mistral::CompletionModel>,
 }

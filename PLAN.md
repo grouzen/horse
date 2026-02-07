@@ -235,19 +235,23 @@ impl Provider for OllamaProvider {
 - **Testability**: Can mock providers by implementing the trait
 - **Clear responsibilities**: Provider trait defines the contract
 
-### 3. Make Repl generic over CompletionModel
+### 3. Update Repl to use AgentWrapper
 
 **Files to modify:**
 - [horse/src/console/repl.rs](horse/src/console/repl.rs)
 
 **Changes:**
-- Update line 50-54:
-  - Change `agent: Agent<anthropic::completion::CompletionModel>` to generic `agent: Agent<M> where M: CompletionModel`
-  - Update `new()` signature: `pub fn new(agent: Agent<M>) -> Self where M: CompletionModel`
-  - Update `run()` signature: `pub async fn run(&mut self) -> Result<()>`
-  - Make struct generic: `pub struct Repl<M: CompletionModel>`
-- Remove hardcoded `use rig::providers::anthropic` import
-- No other changes needed—`ProgressHook` already generic, `format_prompt()` uses trait `Usage`
+- Remove hardcoded `use rig::{agent::Agent, providers::anthropic}` import
+- Add `use crate::providers::AgentWrapper` import
+- Update struct field (line ~50):
+  - Change `agent: Agent<anthropic::completion::CompletionModel>` to `agent: Box<dyn AgentWrapper>`
+- Update `new()` signature:
+  - Change parameter from `Agent<anthropic::completion::CompletionModel>` to `Box<dyn AgentWrapper>`
+- Update `run()` method to use AgentWrapper trait:
+  - Replace `.prompt(input).with_history(&mut history).with_hook(hook.clone()).await`
+  - With `.prompt(input.to_string(), &mut history, hook.clone()).await`
+- No generic type parameters needed—using trait object for dynamic dispatch
+- This approach allows any provider's agent to be used without type constraints in main
 
 ### 4. Update main.rs for provider selection
 
@@ -268,23 +272,7 @@ impl Provider for OllamaProvider {
   - Create agent: `let agent = provider.create_agent(&config, &base_dir, &preamble)?`
 - Initialize Repl with agent: `let mut repl = Repl::new(agent);`
 
-### 5. Handle model type erasure
-
-**Technical decision needed:**
-
-Since `Repl<M>` becomes generic, `main()` needs to handle different concrete types.
-
-**Options:**
-- **A) Enum dispatch**: Wrap agent in enum, match in Repl methods
-- **B) Macro**: Generate provider-specific main flows
-- **C) Box<dyn>**: Box the agent (if Rig supports, requires investigating trait objects)
-
-**Action:**
-- Investigate Rig's `Agent` trait object support
-- If unsupported, use enum dispatch in `providers.rs`
-- Return `Box<dyn Repl>` or enum `AgentWrapper` from provider creation
-
-### 6. Create example config file
+### 5. Create example config file
 
 **Files to create:**
 - [horse/config.example.toml](horse/config.example.toml)
@@ -350,7 +338,7 @@ num_ctx = 4096         # Context window size
 - Easy to extend with new provider-specific features
 - Clear separation between providers in config file
 
-### 7. Update documentation
+### 6. Update documentation
 
 **Files to modify:**
 - [horse/README.md](horse/README.md)
@@ -387,7 +375,7 @@ See config.example.toml for complete list and configuration options.
 - Update tech stack section to mention multi-provider support
 - Add note about Rig library provider abstraction
 
-### 8. Add validation and error handling
+### 7. Add validation and error handling
 
 **Files to modify:**
 - [horse/src/providers.rs](horse/src/providers.rs)
@@ -475,10 +463,15 @@ cargo make check-all
 
 ## Design Decisions
 
-### 1. Generic Repl approach
-**Decision:** Make `Repl<M: CompletionModel>` generic
+### 1. AgentWrapper trait object approach
+**Decision:** Use `Box<dyn AgentWrapper>` in Repl instead of making it generic
 
-**Rationale:** Simplest approach given hooks/tools already generic. Follows Rust best practices.
+**Rationale:** 
+- Simpler main.rs: No need to handle different concrete types
+- Dynamic dispatch: All providers return same type from create_agent()
+- Clean abstraction: Repl only depends on AgentWrapper trait, not specific providers
+- Follows Rust best practices for runtime polymorphism
+- Avoids macro complexity or enum dispatch boilerplate
 
 ### 2. Provider as trait, not enum
 **Decision:** Use trait-based design with concrete provider structs
@@ -489,11 +482,6 @@ cargo make check-all
 - Rust idiomatic: Trait objects allow runtime polymorphism
 - Cleaner code: No giant match statement in providers.rs
 - Each provider can be in its own module for organization
-
-### 3. Type erasure strategy
-**Decision:** Use trait objects or enum dispatch for main if needed
-
-**Rationale:** Avoids macro complexity, provides clear control flow, good error messages.
 
 ### 3. Default provider
 **Decision:** Default to Anthropic

@@ -42,6 +42,7 @@ pub use together_provider::TogetherProvider;
 pub use xai_provider::XAIProvider;
 
 /// Provider trait defines the contract for all LLM providers
+#[allow(dead_code)]
 pub trait Provider {
     /// Get the name of this provider (e.g., "anthropic", "openai")
     fn name(&self) -> &str;
@@ -75,6 +76,7 @@ pub trait AgentWrapper: Send + Sync {
 }
 
 /// Get a provider instance by name
+#[allow(dead_code)]
 pub fn get_provider(name: &str) -> Result<Box<dyn Provider>> {
     match name.to_lowercase().as_str() {
         "anthropic" => Ok(Box::new(AnthropicProvider)),
@@ -103,6 +105,7 @@ pub fn get_provider(name: &str) -> Result<Box<dyn Provider>> {
 }
 
 /// Validate that all required environment variables are set for a provider
+#[allow(dead_code)]
 pub fn validate_env_vars(provider: &dyn Provider) -> Result<()> {
     let missing_vars: Vec<&str> = provider
         .required_env_vars()

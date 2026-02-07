@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 use anyhow::Result;
 use rig::agent::{Agent, AgentBuilder};
 use rig::client::{CompletionClient, ProviderClient};
@@ -52,6 +53,7 @@ impl Provider for AnthropicProvider {
     }
 }
 
+#[allow(dead_code)]
 struct AnthropicAgentWrapper {
     agent: Agent<anthropic::completion::CompletionModel>,
 }

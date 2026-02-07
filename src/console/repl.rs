@@ -1,12 +1,12 @@
-use rig::{agent::Agent, providers::anthropic};
 use std::io::{self, BufRead, Write};
 
 use anyhow::{Context, Result};
-use rig::completion::{Prompt, Usage};
+use rig::completion::Usage;
 
 use crate::{
     agent::hooks::ProgressHook,
     console::{colors, markdown, spinner::create_spinner},
+    providers::AgentWrapper,
 };
 
 /// Format a number with k suffix for values >= 1000
@@ -47,11 +47,11 @@ fn format_prompt(usage: Usage) -> String {
 }
 
 pub struct Repl {
-    agent: Agent<anthropic::completion::CompletionModel>,
+    agent: Box<dyn AgentWrapper>,
 }
 
 impl Repl {
-    pub fn new(agent: Agent<anthropic::completion::CompletionModel>) -> Self {
+    pub fn new(agent: Box<dyn AgentWrapper>) -> Self {
         Self { agent }
     }
 
@@ -99,9 +99,7 @@ impl Repl {
             // Execute query with history and progress hook
             match self
                 .agent
-                .prompt(input)
-                .with_history(&mut history)
-                .with_hook(hook.clone())
+                .prompt(input.to_string(), &mut history, hook.clone())
                 .await
             {
                 Ok(response) => {
