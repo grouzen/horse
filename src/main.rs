@@ -171,8 +171,9 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
             continue;
         }
 
-        // Start spinner before processing
+        // Start spinner and give it to the hook for control
         let spinner = create_spinner("Processing");
+        hook.set_external_spinner(spinner);
 
         // Execute query with history and progress hook
         match agent
@@ -182,11 +183,19 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
             .await
         {
             Ok(response) => {
-                spinner.finish_and_clear();
+                // Clear any remaining spinner
+                if let Some(s) = hook.get_external_spinner() {
+                    s.finish_and_clear();
+                }
+
                 horse::markdown::render_markdown(&response);
             }
             Err(e) => {
-                spinner.finish_and_clear();
+                // Clear any remaining spinner
+                if let Some(s) = hook.get_external_spinner() {
+                    s.finish_and_clear();
+                }
+
                 eprintln!("{}", colors::color_error(format!(">> Error: {:#}\n", e)));
             }
         }
