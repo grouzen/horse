@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::path::Path;
 
-use crate::{agent::hooks::ProgressHook, config::Config};
+use crate::{agent::hooks::ProgressHook, config::Config, console::colors};
 
 mod anthropic_provider;
 mod azure_provider;
@@ -112,11 +112,11 @@ pub fn validate_env_vars(provider: &dyn Provider) -> Result<()> {
         .collect();
 
     if !missing_vars.is_empty() {
-        anyhow::bail!(
+        anyhow::bail!(colors::color_error(format!(
             "Missing required environment variables for provider '{}': {}",
             provider.name(),
             missing_vars.join(", ")
-        );
+        )));
     }
 
     Ok(())
