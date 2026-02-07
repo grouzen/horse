@@ -63,7 +63,7 @@ where
         let truncated_args = Self::truncate_display(&display_args, 200);
         println!(
             "{}",
-            colors::color_debug(format!("\n>> Tool call: {tool_name}({truncated_args})"))
+            colors::color_debug(format!("\n>> {tool_name}({truncated_args})"))
         );
 
         ToolCallHookAction::cont()
