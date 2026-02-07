@@ -136,6 +136,8 @@ where
         // Check if result contains an ToolCallError and display it
         // TODO: would be nice to have a better way to detect errors (open an issue in rig repo?)
         if result.contains("ToolCallError") {
+            self.stop_spinner();
+
             let truncated_result = Self::truncate_display(result, 500);
             println!(
                 "{}",
