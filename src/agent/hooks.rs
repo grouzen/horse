@@ -43,13 +43,30 @@ impl ProgressHook {
     }
 
     /// Take and return the current spinner, if any
-    pub fn get_spinner(&self) -> Option<ProgressBar> {
+    fn get_spinner(&self) -> Option<ProgressBar> {
         self.spinner.lock().ok().and_then(|mut s| s.take())
     }
 
     /// Take and return the current spinner, if any
-    pub fn get_external_spinner(&self) -> Option<ProgressBar> {
+    fn get_external_spinner(&self) -> Option<ProgressBar> {
         self.external_spinner.lock().ok().and_then(|mut s| s.take())
+    }
+
+    pub fn stop_spinner(&self) {
+        if let Some(s) = self.get_spinner() {
+            s.finish_and_clear();
+        }
+    }
+
+    pub fn stop_external_spinner(&self) {
+        if let Some(s) = self.get_external_spinner() {
+            s.finish_and_clear();
+        }
+    }
+
+    pub fn stop_all_spinners(&self) {
+        self.stop_spinner();
+        self.stop_external_spinner();
     }
 
     pub fn set_total_usage(&self, delta: Usage) {
@@ -135,9 +152,7 @@ where
         response: &CompletionResponse<M::Response>,
     ) -> HookAction {
         // Stop tool spinner before printing output
-        if let Some(s) = self.get_spinner() {
-            s.finish_and_clear();
-        }
+        self.stop_spinner();
 
         // Extract and accumulate token usage
         self.set_total_usage(response.usage);
