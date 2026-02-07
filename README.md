@@ -34,7 +34,7 @@ export ANTHROPIC_API_KEY=your_key
 horse
 
 # Run in a specific directory
-horse --dir /path/to/project
+horse /path/to/project
 
 # Use a different model
 horse --model claude-sonnet-4-0
@@ -47,7 +47,6 @@ horse --max-turns 30
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `-d, --dir` | `.` | Target directory to search |
 | `-m, --model` | `claude-sonnet-4-0` | Claude model to use |
 | `-t, --max-turns` | `20` | Max agent turns per query |
 
