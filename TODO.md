@@ -8,6 +8,6 @@
 - [x] 4. Update CLI argument parsing
 - [x] 5. Create example config file
 - [ ] 6. Modify main.rs for provider selection
-- [x] 7. Update documentation
+- [x] 7. Add validation and error handling
 - [ ] 8. Add testing infrastructure
-- [ ] 8. Final validation and cleanup
+- [ ] 9. Final validation and cleanup

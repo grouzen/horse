@@ -96,10 +96,11 @@ pub fn get_provider(name: &str) -> Result<Box<dyn Provider>> {
         "perplexity" => Ok(Box::new(PerplexityProvider)),
         "together" => Ok(Box::new(TogetherProvider)),
         "xai" => Ok(Box::new(XAIProvider)),
-        _ => anyhow::bail!(
-            "Unknown provider: {}. Supported providers: anthropic, azure, cohere, deepseek, galadriel, gemini, groq, huggingface, hyperbolic, mira, mistral, moonshot, ollama, openai, openrouter, perplexity, together, xai",
-            name
-        ),
+        _ => anyhow::bail!(colors::color_error(format!(
+            "Unknown provider '{}'\n\nSupported providers:\n  {}",
+            name,
+            supported_providers().join(", ")
+        ))),
     }
 }
 
@@ -113,11 +114,35 @@ pub fn validate_env_vars(provider: &dyn Provider) -> Result<()> {
 
     if !missing_vars.is_empty() {
         anyhow::bail!(colors::color_error(format!(
-            "Missing required environment variables for provider '{}': {}",
+            "Missing required environment variables for provider '{}':\n  {}\n\nPlease set the environment variable(s) or choose a different provider.",
             provider.name(),
             missing_vars.join(", ")
         )));
     }
 
     Ok(())
+}
+
+/// Get a list of all supported provider names
+pub fn supported_providers() -> Vec<&'static str> {
+    vec![
+        "anthropic",
+        "azure",
+        "cohere",
+        "deepseek",
+        "galadriel",
+        "gemini",
+        "groq",
+        "huggingface",
+        "hyperbolic",
+        "mira",
+        "mistral",
+        "moonshot",
+        "ollama",
+        "openai",
+        "openrouter",
+        "perplexity",
+        "together",
+        "xai",
+    ]
 }
