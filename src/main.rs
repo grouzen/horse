@@ -10,9 +10,11 @@ use rig::providers::anthropic;
 
 mod colors;
 mod hooks;
+mod spinner;
 mod tools;
 
 use hooks::ProgressHook;
+use spinner::create_spinner;
 use tools::{BashCommand, ReadFile, SearchDocs};
 
 #[derive(Parser, Debug)]
@@ -169,6 +171,9 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
             continue;
         }
 
+        // Start spinner before processing
+        let spinner = create_spinner("Processing");
+
         // Execute query with history and progress hook
         match agent
             .prompt(input)
@@ -177,9 +182,11 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
             .await
         {
             Ok(response) => {
+                spinner.finish_and_clear();
                 horse::markdown::render_markdown(&response);
             }
             Err(e) => {
+                spinner.finish_and_clear();
                 eprintln!("{}", colors::color_error(format!(">> Error: {:#}\n", e)));
             }
         }
