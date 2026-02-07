@@ -17,12 +17,11 @@ pub struct Config {
 
     // Optional provider-specific feature sections
     #[serde(default)]
-    #[allow(dead_code)]
     pub anthropic: Option<AnthropicFeatures>,
 }
 
 // Provider-specific feature structures
-#[allow(dead_code)]
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct AnthropicFeatures {
     #[serde(default)]
@@ -30,17 +29,15 @@ pub struct AnthropicFeatures {
 }
 
 // Default value functions
-#[allow(dead_code)]
+
 fn default_provider() -> String {
     "anthropic".to_string()
 }
 
-#[allow(dead_code)]
 fn default_model() -> String {
     "claude-sonnet-4-0".to_string()
 }
 
-#[allow(dead_code)]
 fn default_max_turns() -> usize {
     20
 }
@@ -56,7 +53,6 @@ impl Default for Config {
     }
 }
 
-#[allow(dead_code)]
 impl Config {
     /// Load configuration from the default location (~/.config/horse/config.toml)
     /// Returns default config if file doesn't exist

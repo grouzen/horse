@@ -5,7 +5,7 @@
 - [x] 1. Add provider configuration infrastructure
 - [x] 2. Create provider abstraction layer (Anthropic only for now)
 - [x] 3. Update Repl to use AgentWrapper
-- [ ] 4. Update CLI argument parsing
+- [x] 4. Update CLI argument parsing
 - [ ] 5. Modify main.rs for provider selection
 - [ ] 6. Update documentation
 - [ ] 7. Add testing infrastructure

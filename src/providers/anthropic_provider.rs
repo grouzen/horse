@@ -1,4 +1,3 @@
-#[allow(dead_code)]
 use anyhow::Result;
 use rig::agent::{Agent, AgentBuilder};
 use rig::client::{CompletionClient, ProviderClient};
@@ -44,6 +43,7 @@ impl Provider for AnthropicProvider {
 
         let agent = AgentBuilder::new(model)
             .preamble(preamble)
+            .default_max_turns(config.max_turns)
             .tool(BashCommand::new(base_dir.to_path_buf()))
             .tool(ReadFile::new(base_dir.to_path_buf()))
             .tool(SearchDocs::new(base_dir.to_path_buf()))
@@ -53,7 +53,6 @@ impl Provider for AnthropicProvider {
     }
 }
 
-#[allow(dead_code)]
 struct AnthropicAgentWrapper {
     agent: Agent<anthropic::completion::CompletionModel>,
 }

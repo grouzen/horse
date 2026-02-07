@@ -261,7 +261,6 @@ impl Provider for OllamaProvider {
 **Changes:**
 - Extend `Args` struct (lines 16-27):
   - Add `--provider` option with default "anthropic"
-  - Add `--config` option to override config path (default: `~/.config/horse/config.toml`)
   - Keep existing `--model` (overrides config)
   - Keep existing `--max-turns` (overrides config)
 - Replace client initialization section (lines 147-165):

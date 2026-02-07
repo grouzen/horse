@@ -2,42 +2,13 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use rig::agent::{Agent, AgentBuilder};
-use rig::client::ProviderClient;
-use rig::completion::Prompt;
-use rig::providers::anthropic;
 
 mod agent;
 mod config;
 mod console;
 mod providers;
 
-use agent::tools::{BashCommand, ReadFile, SearchDocs};
-use providers::AgentWrapper;
-
 use crate::console::{colors, repl::Repl};
-
-// Temporary wrapper until step 4 is implemented
-struct TempAgentWrapper {
-    agent: Agent<anthropic::completion::CompletionModel>,
-}
-
-#[async_trait::async_trait]
-impl AgentWrapper for TempAgentWrapper {
-    async fn prompt(
-        &mut self,
-        input: String,
-        history: &mut Vec<rig::completion::Message>,
-        hook: agent::hooks::ProgressHook,
-    ) -> Result<String> {
-        self.agent
-            .prompt(input)
-            .with_hook(hook)
-            .with_history(history)
-            .await
-            .map_err(|e| anyhow::anyhow!(e))
-    }
-}
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
@@ -47,13 +18,17 @@ struct Args {
     #[arg(default_value = ".")]
     dir: PathBuf,
 
-    /// Claude model to use
-    #[arg(short, long, default_value = "claude-sonnet-4-0")]
-    model: String,
+    /// LLM provider to use (overrides config file)
+    #[arg(short, long)]
+    provider: Option<String>,
 
-    /// Maximum number of turns for the agent
-    #[arg(short = 't', long, default_value = "20")]
-    max_turns: usize,
+    /// Model to use (overrides config file)
+    #[arg(short = 'm', long)]
+    model: Option<String>,
+
+    /// Maximum number of turns for the agent (overrides config file)
+    #[arg(short = 't', long)]
+    max_turns: Option<usize>,
 }
 
 /// Gather directory structure by running `find` command
@@ -132,6 +107,10 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
 
+    // Load config and merge with CLI arguments
+    let mut config = config::Config::load()?;
+    config.merge_with_args(args.provider, args.model, args.max_turns);
+
     // Canonicalize directory to absolute path
     let base_dir = args
         .dir
@@ -148,30 +127,24 @@ async fn main() -> Result<()> {
         "Working directory: {}",
         colors::color_status(base_dir.display())
     );
-    println!("Model: {}", colors::color_status(&args.model));
-    println!("Max turns: {}", colors::color_status(args.max_turns));
+    println!("Provider: {}", colors::color_status(&config.provider));
+    println!("Model: {}", colors::color_status(&config.model));
+    println!("Max turns: {}", colors::color_status(config.max_turns));
     println!();
 
     // Load preamble from AGENTS.md or use default
     let preamble = load_preamble(&base_dir).await?;
 
-    // Initialize Anthropic client (from_env reads ANTHROPIC_API_KEY automatically)
-    let client = anthropic::Client::from_env();
+    // Get provider instance
+    let provider = providers::get_provider(&config.provider)?;
 
-    let model =
-        anthropic::completion::CompletionModel::new(client, &args.model).with_prompt_caching();
+    // Validate required environment variables
+    providers::validate_env_vars(provider.as_ref())?;
 
-    // Create agent with tools and preamble
-    let agent = AgentBuilder::new(model)
-        .preamble(&preamble)
-        .default_max_turns(args.max_turns)
-        .tool(ReadFile::new(base_dir.clone()))
-        .tool(BashCommand::new(base_dir.clone()))
-        .tool(SearchDocs::new(base_dir.clone()))
-        .build();
+    // Create agent using the provider
+    let agent = provider.create_agent(&config, &base_dir, &preamble)?;
 
-    let wrapped_agent = Box::new(TempAgentWrapper { agent });
-    let mut repl = Repl::new(wrapped_agent);
+    let mut repl = Repl::new(agent);
 
     // Run the REPL loop
     repl.run().await
