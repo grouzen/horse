@@ -3,6 +3,9 @@
 ## Tech stack
 
 - https://github.com/0xPlaygrounds/rig to interact with llm providers and provide basic agentic functionality
+  - Multi-provider support: 18 LLM providers including Anthropic, OpenAI, Gemini, Ollama, and more
+  - Provider abstraction via trait-based architecture for extensibility
+  - Type-safe provider-specific features (e.g., Anthropic prompt caching, Ollama context settings)
 - tokio for async programming
 - serde_json for json serialization/deserialization
 - clap for command line argument parsing
