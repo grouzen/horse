@@ -1,19 +1,17 @@
-use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use rig::agent::{Agent, AgentBuilder};
+use rig::agent::AgentBuilder;
 use rig::client::ProviderClient;
-use rig::completion::{Prompt, Usage};
 use rig::providers::anthropic;
 
 mod agent;
 mod console;
 
-use agent::hooks::ProgressHook;
 use agent::tools::{BashCommand, ReadFile, SearchDocs};
-use console::{colors, spinner::create_spinner};
+
+use crate::console::{colors, repl::Repl};
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
@@ -30,43 +28,6 @@ struct Args {
     /// Maximum number of turns for the agent
     #[arg(short = 't', long, default_value = "20")]
     max_turns: usize,
-}
-
-/// Format a number with k suffix for values >= 1000
-fn format_token_count(count: u64) -> String {
-    if count < 1000 {
-        count.to_string()
-    } else {
-        let k_value = count as f64 / 1000.0;
-        format!("{:.1}k", k_value)
-    }
-}
-
-/// Generate the prompt string with token usage information
-fn format_prompt(usage: Usage) -> String {
-    let input_str = format_token_count(usage.input_tokens);
-    let output_str = format_token_count(usage.output_tokens);
-
-    if usage.cached_input_tokens > 0 {
-        let cached_str = format_token_count(usage.cached_input_tokens);
-        format!(
-            "{} {} ({} {}), {} {}> ",
-            colors::color_dim("in"),
-            colors::color_prompt_number(&input_str),
-            colors::color_prompt_number(&cached_str),
-            colors::color_dim("cached"),
-            colors::color_dim("out"),
-            colors::color_prompt_number(&output_str)
-        )
-    } else {
-        format!(
-            "{} {}, {} {}> ",
-            colors::color_dim("in"),
-            colors::color_prompt_number(&input_str),
-            colors::color_dim("out"),
-            colors::color_prompt_number(&output_str)
-        )
-    }
 }
 
 /// Gather directory structure by running `find` command
@@ -131,77 +92,6 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
     Ok(preamble)
 }
 
-/// Run the interactive REPL loop for the agent.
-async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Result<()> {
-    println!(
-        "{}",
-        colors::color_success(">> Ready! Type your queries (Ctrl+C or Ctrl+D to exit)")
-    );
-    println!();
-
-    let stdin = io::stdin();
-    let mut handle = stdin.lock();
-    let mut buffer = String::new();
-    let mut history = Vec::new();
-    let hook = ProgressHook::new();
-
-    loop {
-        // Prompt with token usage
-        print!("{}", format_prompt(hook.get_total_usage()));
-        io::stdout().flush()?;
-
-        // Read line
-        buffer.clear();
-        let bytes_read = handle
-            .read_line(&mut buffer)
-            .context("Failed to read line from stdin")?;
-
-        // Check for EOF (Ctrl+D)
-        if bytes_read == 0 {
-            println!("\n{}", colors::color_status(">> Goodbye!"));
-            break;
-        }
-
-        let input = buffer.trim();
-
-        // Skip empty lines
-        if input.is_empty() {
-            continue;
-        }
-
-        // Start spinner and give it to the hook for control
-        let spinner = create_spinner("Processing");
-        hook.set_external_spinner(spinner);
-
-        // Execute query with history and progress hook
-        match agent
-            .prompt(input)
-            .with_history(&mut history)
-            .with_hook(hook.clone())
-            .await
-        {
-            Ok(response) => {
-                // Clear any remaining spinner
-                if let Some(s) = hook.get_external_spinner() {
-                    s.finish_and_clear();
-                }
-
-                console::markdown::render_markdown(&response);
-            }
-            Err(e) => {
-                // Clear any remaining spinner
-                if let Some(s) = hook.get_external_spinner() {
-                    s.finish_and_clear();
-                }
-
-                eprintln!("{}", colors::color_error(format!(">> Error: {:#}\n", e)));
-            }
-        }
-    }
-
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     // Install color-eyre without using `?` since it returns ErrReport
@@ -244,7 +134,6 @@ async fn main() -> Result<()> {
         anthropic::completion::CompletionModel::new(client, &args.model).with_prompt_caching();
 
     // Create agent with tools and preamble
-
     let agent = AgentBuilder::new(model)
         .preamble(&preamble)
         .default_max_turns(args.max_turns)
@@ -253,6 +142,8 @@ async fn main() -> Result<()> {
         .tool(SearchDocs::new(base_dir.clone()))
         .build();
 
+    let mut repl = Repl::new(agent);
+
     // Run the REPL loop
-    run_repl(agent).await
+    repl.run().await
 }
