@@ -17,7 +17,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 /// # Example
 ///
 /// ```no_run
-/// use horse::spinner::create_spinner;
+/// use horse::console::spinner::create_spinner;
 ///
 /// let spinner = create_spinner("Processing");
 /// // ... do some work ...

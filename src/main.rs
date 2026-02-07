@@ -8,14 +8,12 @@ use rig::client::ProviderClient;
 use rig::completion::{Prompt, Usage};
 use rig::providers::anthropic;
 
-mod colors;
-mod hooks;
-mod spinner;
-mod tools;
+mod agent;
+mod console;
 
-use hooks::ProgressHook;
-use spinner::create_spinner;
-use tools::{BashCommand, ReadFile, SearchDocs};
+use agent::hooks::ProgressHook;
+use agent::tools::{BashCommand, ReadFile, SearchDocs};
+use console::{colors, spinner::create_spinner};
 
 #[derive(Parser, Debug)]
 #[command(name = "horse")]
@@ -188,7 +186,7 @@ async fn run_repl(agent: Agent<anthropic::completion::CompletionModel>) -> Resul
                     s.finish_and_clear();
                 }
 
-                horse::markdown::render_markdown(&response);
+                console::markdown::render_markdown(&response);
             }
             Err(e) => {
                 // Clear any remaining spinner

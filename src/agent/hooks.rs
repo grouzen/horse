@@ -1,6 +1,6 @@
-use crate::colors;
-use crate::spinner::create_spinner;
-use crate::tools::Tools;
+use crate::agent::tools::Tools;
+use crate::console::colors;
+use crate::console::spinner::create_spinner;
 use indicatif::ProgressBar;
 use rig::agent::{HookAction, PromptHook, ToolCallHookAction};
 use rig::completion::{CompletionModel, CompletionResponse, Usage};
