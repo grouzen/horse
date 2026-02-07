@@ -105,18 +105,14 @@ impl Repl {
                 .await
             {
                 Ok(response) => {
-                    // Clear any remaining spinner
-                    if let Some(s) = hook.get_external_spinner() {
-                        s.finish_and_clear();
-                    }
+                    // Clear any remaining spinners (both internal and external)
+                    hook.stop_all_spinners();
 
                     markdown::render_markdown(&response);
                 }
                 Err(e) => {
-                    // Clear any remaining spinner
-                    if let Some(s) = hook.get_external_spinner() {
-                        s.finish_and_clear();
-                    }
+                    // Clear any remaining spinners (both internal and external)
+                    hook.stop_all_spinners();
 
                     eprintln!("{}", colors::color_error(format!(">> Error: {:#}\n", e)));
                 }

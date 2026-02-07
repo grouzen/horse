@@ -56,6 +56,7 @@ async fn gather_directory_context(base_dir: &Path) -> Result<String> {
 /// otherwise return a default preamble.
 async fn load_preamble(base_dir: &Path) -> Result<String> {
     let agents_file = base_dir.join("AGENTS.md");
+
     let mut preamble = if agents_file.exists() {
         println!("{}", colors::color_status(">> Loading AGENTS.md..."));
         tokio::fs::read_to_string(&agents_file)
@@ -72,6 +73,7 @@ async fn load_preamble(base_dir: &Path) -> Result<String> {
         "{}",
         colors::color_status(">> Gathering directory structure...")
     );
+
     match gather_directory_context(base_dir).await {
         Ok(file_list) => {
             preamble.push_str("\n\n## Available Files\n\n");
