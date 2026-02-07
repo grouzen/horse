@@ -20,7 +20,7 @@ use tools::{BashCommand, ReadFile, SearchDocs};
 #[command(about = "An agentic search assistant for intelligent directory exploration")]
 struct Args {
     /// Target directory to search and execute commands in
-    #[arg(short, long, default_value = ".")]
+    #[arg(default_value = ".")]
     dir: PathBuf,
 
     /// Claude model to use
