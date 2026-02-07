@@ -24,6 +24,21 @@ Or build from source:
 cargo build --release
 ```
 
+## Configuration
+
+Horse supports configuration via a TOML file at `~/.config/horse/config.toml`. 
+
+To get started, copy the example configuration:
+
+```bash
+mkdir -p ~/.config/horse
+cp config.example.toml ~/.config/horse/config.toml
+```
+
+Edit the config file to set your preferred provider, model, and features. All settings in the config file can be overridden via command-line arguments.
+
+See [config.example.toml](config.example.toml) for detailed documentation of all available options and supported providers.
+
 ## Usage
 
 ```bash

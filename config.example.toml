@@ -1,0 +1,175 @@
+# Horse Configuration File
+# =======================
+# Copy this file to ~/.config/horse/config.toml and customize it for your needs.
+# All settings here can be overridden via command-line arguments.
+
+# === Basic Configuration ===
+
+# Default LLM provider to use (see list below)
+provider = "anthropic"
+
+# Default model for the selected provider
+model = "claude-sonnet-4-0"
+
+# Maximum conversation turns before requiring user confirmation
+max_turns = 20
+
+# === Provider-Specific Features ===
+# Each provider can have its own features section.
+# Only the section matching your active provider is used.
+
+# Anthropic-specific features
+[anthropic]
+# Enable Anthropic's prompt caching feature to reduce API costs
+# and improve response times for repeated prompts
+prompt_caching = true
+
+# OpenAI-specific features (for when provider = "openai")
+# [openai]
+# Future: response_format, seed, temperature overrides, etc.
+
+# Ollama-specific features (for when provider = "ollama")  
+# [ollama]
+# keep_alive = "5m"      # How long to keep model loaded in memory
+# num_ctx = 4096         # Context window size
+
+# === Supported Providers ===
+# Below is a complete list of all supported providers with their required
+# environment variables and default models. Uncomment and modify the provider
+# and model settings above to use a different provider.
+
+# -----------------------------------------------------------------------------
+# Cloud Providers (Require API Keys)
+# -----------------------------------------------------------------------------
+
+# Anthropic - Claude models
+# Required: ANTHROPIC_API_KEY
+# Default model: claude-sonnet-4-0
+# Other models: claude-opus-4-0, claude-haiku-4-0, claude-3-5-sonnet-20241022
+# Get API key: https://console.anthropic.com/
+
+# OpenAI - GPT models  
+# Required: OPENAI_API_KEY
+# Default model: gpt-4o-mini
+# Other models: gpt-4o, gpt-4-turbo, gpt-3.5-turbo
+# Get API key: https://platform.openai.com/api-keys
+
+# Google Gemini - Gemini models
+# Required: GEMINI_API_KEY
+# Default model: gemini-1.5-pro
+# Other models: gemini-1.5-flash, gemini-1.0-pro
+# Get API key: https://ai.google.dev/
+
+# Azure OpenAI - Microsoft-hosted OpenAI models
+# Required: AZURE_API_KEY, AZURE_API_VERSION, AZURE_ENDPOINT
+# Default model: gpt-4
+# Note: Requires Azure OpenAI Service resource
+# Get started: https://azure.microsoft.com/en-us/products/ai-services/openai-service
+
+# Groq - Fast inference for open models
+# Required: GROQ_API_KEY
+# Default model: llama-3.3-70b-versatile
+# Other models: mixtral-8x7b-32768, gemma-7b-it
+# Get API key: https://console.groq.com/
+
+# Cohere - Command models
+# Required: COHERE_API_KEY
+# Default model: command-r-plus
+# Other models: command-r, command-light
+# Get API key: https://dashboard.cohere.com/
+
+# DeepSeek - DeepSeek models
+# Required: DEEPSEEK_API_KEY
+# Default model: deepseek-chat
+# Get API key: https://platform.deepseek.com/
+
+# Mistral AI - Mistral models
+# Required: MISTRAL_API_KEY
+# Default model: mistral-large-latest
+# Other models: mistral-medium, mistral-small, mixtral-8x7b
+# Get API key: https://console.mistral.ai/
+
+# Perplexity - Online search-augmented models
+# Required: PERPLEXITY_API_KEY
+# Default model: llama-3.1-sonar-large-128k-online
+# Get API key: https://www.perplexity.ai/settings/api
+
+# xAI - Grok models
+# Required: XAI_API_KEY
+# Default model: grok-beta
+# Get API key: https://x.ai/
+
+# OpenRouter - Access to multiple providers
+# Required: OPENROUTER_API_KEY
+# Default model: anthropic/claude-3.5-sonnet
+# Get API key: https://openrouter.ai/keys
+
+# Together AI - Fast inference platform
+# Required: TOGETHER_API_KEY
+# Default model: meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo
+# Get API key: https://api.together.xyz/settings/api-keys
+
+# Hugging Face - Access to HF Inference API
+# Required: HUGGINGFACE_API_KEY
+# Default model: meta-llama/Meta-Llama-3-8B-Instruct
+# Get API key: https://huggingface.co/settings/tokens
+
+# Hyperbolic - Fast GPU inference
+# Required: HYPERBOLIC_API_KEY
+# Default model: meta-llama/Meta-Llama-3-70B-Instruct
+# Get API key: https://www.hyperbolic.xyz/
+
+# Galadriel - Blockchain-based AI
+# Required: GALADRIEL_API_KEY
+# Default model: llama3.1:70b
+# Get API key: https://galadriel.com/
+
+# Mira - AI infrastructure platform
+# Required: MIRA_API_KEY
+# Default model: gpt-4
+# Get API key: Contact Mira for access
+
+# Moonshot - Chinese LLM provider
+# Required: MOONSHOT_API_KEY
+# Default model: moonshot-v1-8k
+# Other models: moonshot-v1-32k, moonshot-v1-128k
+# Get API key: https://platform.moonshot.cn/
+
+# -----------------------------------------------------------------------------
+# Local Providers (No API Key Required)
+# -----------------------------------------------------------------------------
+
+# Ollama - Run models locally
+# Required: None (Ollama server must be running)
+# Default model: llama3
+# Other models: mistral, codellama, phi, neural-chat (install via `ollama pull`)
+# Install: https://ollama.ai/
+# Note: Start Ollama server with `ollama serve` before using
+
+# -----------------------------------------------------------------------------
+# Usage Examples
+# -----------------------------------------------------------------------------
+
+# Example 1: Use OpenAI with GPT-4
+# provider = "openai"
+# model = "gpt-4o"
+# Don't forget to set: export OPENAI_API_KEY=your-key-here
+
+# Example 2: Use Ollama locally
+# provider = "ollama"
+# model = "llama3"
+# Run: ollama serve
+
+# Example 3: Use Anthropic with prompt caching
+# provider = "anthropic"
+# model = "claude-sonnet-4-0"
+# [anthropic]
+# prompt_caching = true
+
+# Example 4: Use Azure OpenAI
+# provider = "azure"
+# model = "gpt-4"
+# Don't forget to set:
+#   export AZURE_API_KEY=your-key
+#   export AZURE_API_VERSION=2024-02-01
+#   export AZURE_ENDPOINT=https://your-resource.openai.azure.com/
