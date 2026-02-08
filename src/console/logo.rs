@@ -216,8 +216,12 @@ fn render_uncolored(text: &str, letter_spacing: usize) -> Result<Vec<String>> {
 ///
 /// # Example
 /// ```
+/// use horse::console::logo::render_logo;
+/// # fn main() -> anyhow::Result<()> {
 /// let logo = render_logo("HORSE")?;
 /// println!("{}", logo);
+/// # Ok(())
+/// # }
 /// ```
 pub fn render_logo(text: &str) -> Result<String> {
     if text.trim().is_empty() {
