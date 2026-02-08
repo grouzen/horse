@@ -31,7 +31,7 @@
      - `render_uncolored(text: &str, letter_spacing: usize) -> Result<Vec<String>>` - builds character array, strips color tags with regex
      - `pub fn render_logo(text: &str) -> Result<String>` - main API that combines rendering + gradient application
 
-4. **Update console module** in `horse/src/console/mod.rs`
+4. **Update console module** in `horse/src/console.rs`
    - Add `pub mod logo;` declaration
    - Keep existing: `colors`, `markdown`, `repl`, `spinner`
 
