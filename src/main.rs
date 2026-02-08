@@ -119,7 +119,7 @@ async fn main() -> Result<()> {
 
     // Render and display the HORSE logo banner
     let logo = console::logo::render_logo("HORSE")?;
-    println!("{}\n", logo);
+    println!("\n{}\n", logo);
 
     println!(
         "Horse - {}",
