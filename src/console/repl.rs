@@ -27,7 +27,7 @@ fn format_prompt(usage: Usage) -> String {
     if usage.cached_input_tokens > 0 {
         let cached_str = format_token_count(usage.cached_input_tokens);
         format!(
-            "{} {} ({} {}), {} {}> ",
+            "{} {} ({} {}), {} {}❯ ",
             colors::color_dim("in"),
             colors::color_prompt_number(&input_str),
             colors::color_prompt_number(&cached_str),
@@ -37,7 +37,7 @@ fn format_prompt(usage: Usage) -> String {
         )
     } else {
         format!(
-            "{} {}, {} {}> ",
+            "{} {}, {} {}❯ ",
             colors::color_dim("in"),
             colors::color_prompt_number(&input_str),
             colors::color_dim("out"),
