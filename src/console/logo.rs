@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use anyhow::{Result, anyhow};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -8,10 +6,10 @@ use std::collections::HashMap;
 
 /// RGB color representation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RgbColor {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+struct RgbColor {
+    r: u8,
+    g: u8,
+    b: u8,
 }
 
 impl RgbColor {
@@ -54,7 +52,7 @@ impl RgbColor {
 }
 
 /// Create a gradient with the specified number of steps
-pub fn create_gradient(colors: &[RgbColor], steps: usize) -> Vec<RgbColor> {
+fn create_gradient(colors: &[RgbColor], steps: usize) -> Vec<RgbColor> {
     if colors.is_empty() {
         return vec![];
     }
@@ -81,7 +79,7 @@ pub fn create_gradient(colors: &[RgbColor], steps: usize) -> Vec<RgbColor> {
 }
 
 /// Apply horizontal gradient (left to right on each line)
-pub fn apply_horizontal_gradient(lines: Vec<String>, colors: &[RgbColor]) -> String {
+fn apply_horizontal_gradient(lines: Vec<String>, colors: &[RgbColor]) -> String {
     let mut result = Vec::new();
 
     for line in lines {
@@ -110,11 +108,10 @@ pub fn apply_horizontal_gradient(lines: Vec<String>, colors: &[RgbColor]) -> Str
 
 /// CFonts font definition structure
 #[derive(Debug, Clone, Deserialize)]
-pub struct CFontData {
-    pub name: String,
-    pub lines: u8,
-    pub letterspace: Vec<String>,
-    pub chars: HashMap<String, Vec<String>>,
+struct CFontData {
+    lines: u8,
+    letterspace: Vec<String>,
+    chars: HashMap<String, Vec<String>>,
 }
 
 impl CFontData {

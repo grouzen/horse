@@ -117,6 +117,10 @@ async fn main() -> Result<()> {
         .canonicalize()
         .context("Failed to canonicalize target directory")?;
 
+    // Render and display the HORSE logo banner
+    let logo = console::logo::render_logo("HORSE")?;
+    println!("{}\n", logo);
+
     println!(
         "Horse - {}",
         colors::color_success(
