@@ -20,3 +20,44 @@ indicatif = "0.17"
 async-trait = "0.1.89"
 lazy_static = "1.4"
 regex = "1.10"
+
+[features]
+default = ["all-providers"]
+all-providers = [
+    "provider-anthropic",
+    "provider-azure",
+    "provider-cohere",
+    "provider-deepseek",
+    "provider-galadriel",
+    "provider-gemini",
+    "provider-groq",
+    "provider-huggingface",
+    "provider-hyperbolic",
+    "provider-mira",
+    "provider-mistral",
+    "provider-moonshot",
+    "provider-ollama",
+    "provider-openai",
+    "provider-openrouter",
+    "provider-perplexity",
+    "provider-together",
+    "provider-xai",
+]
+provider-anthropic = []
+provider-azure = []
+provider-cohere = []
+provider-deepseek = []
+provider-galadriel = []
+provider-gemini = []
+provider-groq = []
+provider-huggingface = []
+provider-hyperbolic = []
+provider-mira = []
+provider-mistral = []
+provider-moonshot = []
+provider-ollama = []
+provider-openai = []
+provider-openrouter = []
+provider-perplexity = []
+provider-together = []
+provider-xai = []
