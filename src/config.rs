@@ -16,12 +16,14 @@ pub struct Config {
     pub max_turns: usize,
 
     // Optional provider-specific feature sections
+    #[cfg(feature = "provider-anthropic")]
     #[serde(default)]
     pub anthropic: Option<AnthropicFeatures>,
 }
 
 // Provider-specific feature structures
 
+#[cfg(feature = "provider-anthropic")]
 #[derive(Debug, Clone, Deserialize)]
 pub struct AnthropicFeatures {
     #[serde(default)]
@@ -48,6 +50,7 @@ impl Default for Config {
             provider: default_provider(),
             model: default_model(),
             max_turns: default_max_turns(),
+            #[cfg(feature = "provider-anthropic")]
             anthropic: None,
         }
     }
@@ -109,6 +112,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "provider-anthropic")]
     fn test_parse_config() {
         let toml_str = r#"
             provider = "anthropic"
